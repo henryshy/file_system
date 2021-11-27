@@ -13,14 +13,14 @@
 #define vDRIVE_SIZE 10240000
 #define FULL_BLOCK 65535
 #define FREE_BLOCK 0
-#define MAX_TEXT_SIZE 10000
+#define MAX_TEXT_SIZE 1024000
 #define MAX_OPEN_FILE 10
-
+#define MAX_BLOCK_FCB_NUM 32
 
 #define getPtr_of_vDrive(n) (my_vdrive+(n-1)*BLOCK_SIZE)
-#define FAT1_PTR getPtr_of_vDrive(2)
-#define FAT2_PTR getPtr_of_vDrive(4)
-
+#define FAT1_PTR (fat*)getPtr_of_vDrive(2)
+#define FAT2_PTR (fat*)getPtr_of_vDrive(4)
+#define ROOT_BLOCK_INDEX 6
 
 typedef unsigned char u8_t;
 typedef unsigned short u16_t;
@@ -37,7 +37,7 @@ typedef struct FCB{   //32B
     u16_t date;// 2B
     u16_t first_block; //2B
     u32_t length;  //4B
-    u8_t empty;// 1B
+    u8_t attribute;// 1B
     u8_t reserve[10]; //保留10B 凑32B
 }fcb;
 
@@ -51,7 +51,7 @@ typedef struct USEROPEN{
     u16_t first_block;
     u64_t length;
 
-    u8_t dir[80];
+    u8_t dir[80]; //当前打开文件的绝对路径
     u32_t rw_ptr;
     u8_t fcbstate;
     u8_t topenfile;
@@ -77,6 +77,7 @@ int do_write(int fd, char* text, int tot_len, int write_method);
 int do_read(int fd, int tot_len, char* text);
 void my_format();
 int get_free_block();
+int get_free_fd();
 
 
 #endif //FS_MYFS_H
