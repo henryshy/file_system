@@ -8,33 +8,33 @@
 		<Option virtualFolders="CMake Files\;"/>
 		<Build>
 			<Target title="all">
-				<Option working_dir="/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry"/>
+				<Option working_dir="/home/pi/Desktop/fs/cmake-build-debug-raspberry"/>
 				<Option type="4"/>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 all"/>
-					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="rebuild_cache">
-				<Option working_dir="/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry"/>
+				<Option working_dir="/home/pi/Desktop/fs/cmake-build-debug-raspberry"/>
 				<Option type="4"/>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
-					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="fs">
-				<Option output="/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/fs" prefix_auto="0" extension_auto="0"/>
-				<Option working_dir="/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry"/>
+				<Option output="/home/pi/Desktop/fs/cmake-build-debug-raspberry/fs" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/pi/Desktop/fs/cmake-build-debug-raspberry"/>
 				<Option object_output="./"/>
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/home/pi/tmp/tmp.uN9Ebakd6D/src"/>
+					<Add directory="/home/pi/Desktop/fs/src"/>
 					<Add directory="/usr/lib/gcc/arm-linux-gnueabihf/8/include"/>
 					<Add directory="/usr/local/include"/>
 					<Add directory="/usr/lib/gcc/arm-linux-gnueabihf/8/include-fixed"/>
@@ -42,20 +42,20 @@
 					<Add directory="/usr/include"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 fs"/>
-					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 fs"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="fs/fast">
-				<Option output="/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/fs" prefix_auto="0" extension_auto="0"/>
-				<Option working_dir="/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry"/>
+				<Option output="/home/pi/Desktop/fs/cmake-build-debug-raspberry/fs" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/pi/Desktop/fs/cmake-build-debug-raspberry"/>
 				<Option object_output="./"/>
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/home/pi/tmp/tmp.uN9Ebakd6D/src"/>
+					<Add directory="/home/pi/Desktop/fs/src"/>
 					<Add directory="/usr/lib/gcc/arm-linux-gnueabihf/8/include"/>
 					<Add directory="/usr/local/include"/>
 					<Add directory="/usr/lib/gcc/arm-linux-gnueabihf/8/include-fixed"/>
@@ -63,33 +63,33 @@
 					<Add directory="/usr/include"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 fs/fast"/>
-					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 fs/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="edit_cache">
-				<Option working_dir="/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry"/>
+				<Option working_dir="/home/pi/Desktop/fs/cmake-build-debug-raspberry"/>
 				<Option type="4"/>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 edit_cache"/>
-					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j4 -f &quot;/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/pi/Desktop/fs/cmake-build-debug-raspberry/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 		</Build>
-		<Unit filename="/home/pi/tmp/tmp.uN9Ebakd6D/main.c">
+		<Unit filename="/home/pi/Desktop/fs/main.c">
 			<Option target="fs"/>
 		</Unit>
-		<Unit filename="/home/pi/tmp/tmp.uN9Ebakd6D/src/myfs.c">
+		<Unit filename="/home/pi/Desktop/fs/src/myfs.c">
 			<Option target="fs"/>
 		</Unit>
-		<Unit filename="/home/pi/tmp/tmp.uN9Ebakd6D/src/myfs.h">
+		<Unit filename="/home/pi/Desktop/fs/src/myfs.h">
 			<Option target="fs"/>
 		</Unit>
-		<Unit filename="/home/pi/tmp/tmp.uN9Ebakd6D/CMakeLists.txt">
+		<Unit filename="/home/pi/Desktop/fs/CMakeLists.txt">
 			<Option virtualFolder="CMake Files\"/>
 		</Unit>
 	</Project>

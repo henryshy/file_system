@@ -13,10 +13,11 @@ void parse_command()
 void startsys()
 {
     my_vdrive=(u8_t*) malloc(vDRIVE_SIZE); //内存空间
-    FILE * fp;
-    if(fp= fopen(FILENAME,"r")!=NULL)
+    FILE * fp= fopen(FILENAME,"rw");
+    if(fp!=NULL)
     {
         fread(buff,vDRIVE_SIZE,1,fp);
+        fclose(fp);
         if(memcmp(buff,"myownsys",8)==0)
         {
             memcpy(my_vdrive,buff,vDRIVE_SIZE);
@@ -32,7 +33,7 @@ void startsys()
     else
     {
         printf("first loading drive, starting format\n");
-        my_format(fp);
+        my_format();
         memcpy(my_vdrive,buff,vDRIVE_SIZE);
     }
 
@@ -45,7 +46,7 @@ void startsys()
     open_file_list[0].first_block=root_fcb->first_block;
     open_file_list[0].length=root_fcb->length;
 
-    strcpy(open_file_list[0].dir,"/root");
+    strcpy(open_file_list[0].dir,"/");
     open_file_list[0].rw_ptr=0;
     open_file_list[0].fcbstate = 0;
     open_file_list[0].topenfile = 1;
@@ -71,7 +72,7 @@ void  my_format()
     fat* fat1;
     fat* fat2;
 
-    fat1=(block0*)FAT1_PTR;
+    fat1=(fat*)FAT1_PTR;
     for(int i=0;i<5;i++)
     {
         fat1[i].index=FULL_BLOCK;
@@ -81,7 +82,7 @@ void  my_format()
         fat1[i].index=FREE_BLOCK;
     }
 
-    fat2=(block0*)FAT2_PTR;
+    fat2=(fat*)FAT2_PTR;
     for(int i=0;i<5;i++)
     {
         fat2[i].index=FULL_BLOCK;
@@ -145,30 +146,56 @@ void my_rm()
 
 int my_open(char* filedir)
 {
-    char* opendir=(char*) malloc(80);
-    char* absolute_dir=(char*) malloc(80);
+    char* opendir=(char*) calloc(1,80); //输入的文件路径
+    char* absolute_dir=(char*)  calloc(1,80); //文件的实际绝对路径
+    char* dir_and_filename=(char*)  calloc(1,80); //去除.和后缀名
+    char* exname=(char*)  calloc(1,80);//后缀名
+    char* filename=(char*)  calloc(1,80);//文件名
 
-    strcpy(opendir,filedir);
-    fcb* fcb_buff[MAX_TEXT_SIZE];
-    char* dir_and_filename;
-    char* exname;
-    char* filename;
-    dir_and_filename= strtok(filedir,".");
-    exname= strtok(NULL,".");
+
+    int point_index= strlen(filedir)-1;
+    int ex_length=0;
+    int mark=0;
+
+    while(point_index>=0){
+        if(opendir[point_index]=='/'){
+            mark=1;
+            break;
+        }
+        if(opendir[point_index]=='.'){
+            break;
+        }
+        else
+        {
+            point_index--;
+            ex_length++;
+        }
+    }
+    if(point_index<=0||point_index>=strlen(filedir)-1){
+        printf("no such file, open fail!\n");
+        return -1;
+    }
+    memcpy(dir_and_filename,filedir,point_index);
+    memcpy(exname,filedir+point_index+1,ex_length);
+
+    fcb* fcb_buff=(fcb*) calloc(1,MAX_TEXT_SIZE);
+
 
     int big_length=strlen(dir_and_filename);
-    int name_index=big_length;
-    while(name_index>0){
+    int name_index=big_length-1;
+    int name_length=0;
+    while(name_index>=0){
 
-        if(dir_and_filename[name_index-1]!='/'){
+        if(dir_and_filename[name_index]!='/'){
             name_index--;
+            name_length++;
         }
         else
         {
             break;
         }
     }
-    filename=dir_and_filename+name_index;
+    memcpy(filename,dir_and_filename+name_index+1,name_length);
 
     if(strcmp(exname,"dir")){
         printf("can not open directory file!\n");
@@ -200,19 +227,18 @@ int my_open(char* filedir)
         do_read(dir_start_block,dir_length,(char*)fcb_buff);
 
         for(int i=0; i < dir_length ; i++){ //在fcb列表中找到目录fcb
-            if(strcmp(fcb_buff[i]->filename,dir)==0&&fcb_buff[i]->attribute==0){
+            if(strcmp(fcb_buff[i].filename,dir)==0&&fcb_buff[i].attribute==0){
                 fcb_index=i;
                 break;
             }
         }
         if(fcb_index==-1){ //没找到目录文件的fcb
-
-            printf("file not found!\n");
+            printf("no such file!\n");
             return 0;
         }
         else{
-            dir_start_block=fcb_buff[fcb_index]->first_block;
-            dir_length=fcb_buff[fcb_index]->length;
+            dir_start_block=fcb_buff[fcb_index].first_block;
+            dir_length=fcb_buff[fcb_index].length;
         }
         dir= strtok(NULL,"/");
         memset(fcb_buff,0,MAX_TEXT_SIZE);
@@ -220,7 +246,7 @@ int my_open(char* filedir)
     //定位完了，此时从dir_buff中查找filename  dir_buff就是需要打开的文件的目录位置
     int file_index;
     for(int i=0;i<dir_length;i++){
-        if(strcmp(fcb_buff[i]->filename,filename)==0&& strcmp(fcb_buff[i]->exname,exname)==0&&fcb_buff[i]->attribute==1){
+        if(strcmp(fcb_buff[i].filename,filename)==0&& strcmp(fcb_buff[i].exname,exname)==0&&fcb_buff[i]->attribute==1){
             file_index=i;
             break;
         }
@@ -231,12 +257,12 @@ int my_open(char* filedir)
         return 0;
     }
     else{
-        strcpy(open_file_list[new_fd].filename,fcb_buff[file_index]->filename);
-        strcpy(open_file_list[new_fd].exname,fcb_buff[file_index]->exname);
-        open_file_list[new_fd].time=fcb_buff[file_index]->time;
-        open_file_list[new_fd].date=fcb_buff[file_index]->date;
-        open_file_list[new_fd].first_block=fcb_buff[file_index]->first_block;
-        open_file_list[new_fd].length=fcb_buff[file_index]->length;
+        strcpy(open_file_list[new_fd].filename,fcb_buff[file_index].filename);
+        strcpy(open_file_list[new_fd].exname,fcb_buff[file_index].exname);
+        open_file_list[new_fd].time=fcb_buff[file_index].time;
+        open_file_list[new_fd].date=fcb_buff[file_index].date;
+        open_file_list[new_fd].first_block=fcb_buff[file_index].first_block;
+        open_file_list[new_fd].length=fcb_buff[file_index].length;
         strcpy(open_file_list[new_fd].dir,absolute_dir);
         open_file_list[new_fd].rw_ptr=0;
         open_file_list[new_fd].fcbstate=0;
@@ -245,6 +271,9 @@ int my_open(char* filedir)
     free(opendir);
     free(absolute_dir);
     free(fcb_buff);
+    free(exname);
+    free(filename);
+    free(dir_and_filename);
 }
 int get_free_fd(){
     for(int i=0;i<MAX_OPEN_FILE;i++){
@@ -261,24 +290,32 @@ void my_close()
 int my_write(int fd)
 {
     if(fd < 0 || fd >= MAX_OPEN_FILE){
-        printf("file not found!\n");
+        printf("file not found, write fail!\n");
+        return -1;
+    }
+    if(open_file_list[fd].topenfile==0){
+        printf("file not opened, write fail!\n");
         return -1;
     }
     printf("waiting command for write method:\n1:截断写\n2:覆盖写\n3:追加写\n");
-    char method[10];
+    char method[10]={'\0'};
     int write_method=0;
-    fgets(method,10,stdin);
-    if(strcmp(method,"1")==0)
-    {
-        write_method=1;
-    }
-    else if(strcmp(method,"2"))
-    {
-        write_method=2;
-    }
-    else if(strcmp(method,"3"))
-    {
-        write_method=3;
+    scanf("%d",&write_method);
+//    if(strcmp(method,"1")==0)
+//    {
+//        write_method=1;
+//    }
+//    else if(strcmp(method,"2")==0)
+//    {
+//        write_method=2;
+//    }
+//    else if(strcmp(method,"3")==0)
+//    {
+//        write_method=3;
+//    }
+    if(write_method<0|write_method>3){
+        printf("write method not found, write fail!\n");
+        return -1;
     }
     char* write_txt=(char*) malloc(MAX_TEXT_SIZE);
     char write_length;

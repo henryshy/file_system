@@ -4,8 +4,8 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
-  "/home/pi/tmp/tmp.uN9Ebakd6D/main.c" "/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/CMakeFiles/fs.dir/main.c.o"
-  "/home/pi/tmp/tmp.uN9Ebakd6D/src/myfs.c" "/home/pi/tmp/tmp.uN9Ebakd6D/cmake-build-debug-raspberry/CMakeFiles/fs.dir/src/myfs.c.o"
+  "/home/pi/Desktop/fs/main.c" "/home/pi/Desktop/fs/cmake-build-debug-raspberry/CMakeFiles/fs.dir/main.c.o"
+  "/home/pi/Desktop/fs/src/myfs.c" "/home/pi/Desktop/fs/cmake-build-debug-raspberry/CMakeFiles/fs.dir/src/myfs.c.o"
   )
 set(CMAKE_C_COMPILER_ID "GNU")
 

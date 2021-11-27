@@ -8,9 +8,10 @@
 #include "stdlib.h"
 #include "string.h"
 #include "time.h"
+#include "regex.h"
 #define FILENAME "myfs.txt"
 #define BLOCK_SIZE 1024
-#define vDRIVE_SIZE 10240000
+#define vDRIVE_SIZE 1024000
 #define FULL_BLOCK 65535
 #define FREE_BLOCK 0
 #define MAX_TEXT_SIZE 1024000
@@ -78,6 +79,6 @@ int do_read(int fd, int tot_len, char* text);
 void my_format();
 int get_free_block();
 int get_free_fd();
-
-
+int my_open(char* filedir);
+int my_write(int fd);
 #endif //FS_MYFS_H
