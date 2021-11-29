@@ -8,11 +8,11 @@
 #include "stdlib.h"
 #include "string.h"
 #include "time.h"
-#include "regex.h"
+
 #define FILENAME "myfs.txt"
 #define BLOCK_SIZE 1024
 #define vDRIVE_SIZE 1024000
-#define FULL_BLOCK 65535
+#define END_OF_FILE 65535
 #define FREE_BLOCK 0
 #define MAX_TEXT_SIZE 1024000
 #define MAX_OPEN_FILE 10
@@ -39,7 +39,8 @@ typedef struct FCB{   //32B
     u16_t first_block; //2B
     u32_t length;  //4B
     u8_t attribute;// 1B
-    u8_t reserve[10]; //保留10B 凑32B
+    u8_t free;
+    u8_t reserve[9]; //保留9B 凑32B
 }fcb;
 
 
@@ -52,6 +53,7 @@ typedef struct USEROPEN{
     u16_t first_block;
     u64_t length;
 
+    u8_t attribute;  // 0:目录 1:数据文件
     u8_t dir[80]; //当前打开文件的绝对路径
     u32_t rw_ptr;
     u8_t fcbstate;
@@ -67,7 +69,7 @@ typedef struct BLOCK0{  //5B
 
 extern u8_t* my_vdrive;
 extern useropen open_file_list[MAX_OPEN_FILE];
-extern int curdir_fd;
+extern int curfd;
 extern u8_t current_dir[80];
 extern u8_t* data_start_ptr;
 extern u8_t buff[vDRIVE_SIZE];  //文件系统缓冲区
@@ -81,4 +83,5 @@ int get_free_block();
 int get_free_fd();
 int my_open(char* filedir);
 int my_write(int fd);
+int name_split(char* filedir,char* opendir,char* dir_and_filename,char* exname,char* filename);
 #endif //FS_MYFS_H

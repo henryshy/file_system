@@ -9,6 +9,7 @@
           </mappings>
           <excludedPaths>
             <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-raspberry" />
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-raspberry" />
           </excludedPaths>
         </serverdata>
       </paths>

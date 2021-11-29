@@ -20,17 +20,3 @@ time.h
 myfs.h
 /home/pi/Desktop/fs/myfs.h
 
-/home/pi/Desktop/fs/src/myfs.c
-myfs.h
-/home/pi/Desktop/fs/src/myfs.h
-
-/home/pi/Desktop/fs/src/myfs.h
-stdio.h
--
-stdlib.h
-/home/pi/Desktop/fs/src/stdlib.h
-string.h
-/home/pi/Desktop/fs/src/string.h
-time.h
-/home/pi/Desktop/fs/src/time.h
-
