@@ -195,9 +195,9 @@ int my_create(char* filedir)
     buff[fcb_index].free = 1;
     buff[fcb_index].length = 0;
     buff[fcb_index].attribute = 1;
-    open_file_list[curfd].rw_ptr=fcb_index*sizeof (fcb);
+    open_file_list[curfd].length+=sizeof (fcb);
 
-    do_write(curfd,(char*)buff,sizeof (fcb),1);
+    do_write(curfd,(char*)buff,open_file_list[curfd].length,1);
 
     open_file_list[curfd].fcbstate=1;
 
