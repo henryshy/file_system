@@ -22,6 +22,8 @@
 #define FAT1_PTR (fat*)getPtr_of_vDrive(2)
 #define FAT2_PTR (fat*)getPtr_of_vDrive(4)
 #define ROOT_BLOCK_INDEX 6
+#define DIR_FILE_NAME 1
+#define DATA_FILE_NAME 0
 
 typedef unsigned char u8_t;
 typedef unsigned short u16_t;
@@ -77,11 +79,15 @@ extern u8_t buff[vDRIVE_SIZE];  //文件系统缓冲区
 void parse_command();
 void startsys();
 int do_write(int fd, char* text, int tot_len, int write_method);
-int do_read(int fd, int tot_len, char* text);
+int do_read(int offset,int start_block, int tot_len, char* text);
 void my_format();
 int get_free_block();
 int get_free_fd();
 int my_open(char* filedir);
 int my_write(int fd);
-int name_split(char* filedir,char* opendir,char* dir_and_filename,char* exname,char* filename);
+int name_split(char* filedir,char* opendir,char* dir_and_filename,char* exname,char* filename,int flag);
+int check_name(char* name,int length);
+int go_to_dir(char* dir_and_filename,char* filename,fcb* fcb_buff);
+
+
 #endif //FS_MYFS_H

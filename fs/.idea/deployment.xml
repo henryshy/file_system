@@ -2,15 +2,25 @@
 <project version="4">
   <component name="PublishConfigData" autoUpload="Always" serverName="raspberry (dea80244-f4dd-4d14-9673-e26be5f0f2ab)" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
-      <paths name="raspberry (dea80244-f4dd-4d14-9673-e26be5f0f2ab)">
+      <paths name="Remote Host (402ddcf8-2b42-461f-9061-f50945304f9e)">
         <serverdata>
           <mappings>
-            <mapping deploy="/Desktop/fs" local="$PROJECT_DIR$" />
+            <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
-          <excludedPaths>
-            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-raspberry" />
-            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-raspberry" />
-          </excludedPaths>
+        </serverdata>
+      </paths>
+      <paths name="rasp1 (4ba3d3b6-9ef4-4b1d-afc4-afbebbee8849)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="rasp2 (004c8414-1ae8-4be5-a987-2e32e6976a93)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/tmp/tmp.dU9jNtHMM1" local="$PROJECT_DIR$" />
+          </mappings>
         </serverdata>
       </paths>
     </serverData>

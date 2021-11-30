@@ -118,9 +118,33 @@ void  my_format()
 
 }
 
-void my_cd()
+int my_cd(char* dirname)
 {
+    if(open_file_list[curfd].attribute==1){
+        printf("can not cd in data file, cd fail!\n");
+        return -1;
+    }
+    char* cd_dir=(char*) calloc(1,80); //输入的文件路径
+    char* absolute_dir=(char*)  calloc(1,80); //文件的实际绝对路径
+    char* name_before_point=(char*)  calloc(1,80); //去除.和后缀名
+    char* exname=(char*)  calloc(1,80);//后缀名
+    char* filename=(char*)  calloc(1,80);//文件名
 
+    int ret= name_split(dirname,cd_dir,name_before_point,exname,filename,DIR_FILE_NAME);
+    if(ret==-1){
+        printf("cd fail!\n");
+        return -1;
+    }
+
+    fcb* fcb_buff=(fcb*) calloc(1,MAX_TEXT_SIZE);
+
+    if(dirname[0]='/'){
+
+    }
+    else
+    {
+
+    }
 }
 void my_mkdir(char* dirname)
 {
@@ -142,12 +166,11 @@ int my_create(char* filedir)
     }
 
     char* opendir=(char*) calloc(1,80); //输入的文件路径
-    char* absolute_dir=(char*)  calloc(1,80); //文件的实际绝对路径
     char* dir_and_filename=(char*)  calloc(1,80); //去除.和后缀名
     char* exname=(char*)  calloc(1,80);//后缀名
     char* filename=(char*)  calloc(1,80);//文件名
 
-    int ret=name_split(filedir,opendir,dir_and_filename,exname,filename);
+    int ret=name_split(filedir, opendir, dir_and_filename, exname, filename, DATA_FILE_NAME);
     if(ret==-1){
         printf("create fail!\n");
         return -1;
@@ -156,19 +179,23 @@ int my_create(char* filedir)
         printf("can not create file with extend name \".dir\", create fail!\n");
         return -1;
     }
-    open_file_list[curfd].rw_ptr=0;
+    if(strcmp(filename,"..")==0){
+        printf("invalid filename, create fail!\n");
+        return -1;
+    }
+
     fcb* buff=(fcb*) calloc(1,MAX_TEXT_SIZE);
 
-    do_read(curfd,open_file_list[curfd].length,buff);
+    int dir_lengrh=go_to_dir(dir_and_filename,filename,buff);
 
-    for(int i=0;i<(open_file_list[curfd].length/sizeof (fcb));i++){
+    for(int i=0;i<dir_lengrh;i++){
         if(strcmp(buff[i].filename,filename)==0&& strcmp(buff[i].exname,exname)==0){
             printf("file already exists, create fail!\n");
             return -1;
         }
     }
     int fcb_index=0;
-    for(int i=0;i<(open_file_list[curfd].length/sizeof (fcb));i++){
+    for(int i=0;i<dir_lengrh;i++){
         if(buff[i].free==0){
             fcb_index=i;
             break;
@@ -197,32 +224,43 @@ int my_create(char* filedir)
     buff[fcb_index].attribute = 1;
     open_file_list[curfd].length+=sizeof (fcb);
 
-    do_write(curfd,(char*)buff,open_file_list[curfd].length,1);
+    do_write(curfd,(char*)(buff+fcb_index),sizeof(fcb),1);
 
+    open_file_list[curfd].rw_ptr=0;
     open_file_list[curfd].fcbstate=1;
-
-
-
-
-
 
 }
 void my_rm()
 {
 
 }
-int name_split(char* filedir,char* opendir,char* dir_and_filename,char* exname,char* filename)
+int check_name(char* name,int length){
+    for(int i=0;i<length-1;i++){
+        if(name[i]==':'||name[i]=='?'||name[i]=='$'||name[i]==' '){
+            return -1;
+        }
+    }
+    return 1;
+}
+int name_split(char* filedir,char* opendir,char* dir_and_filename,char* exname,char* filename,int flag)
 {
+    int check;
+    check=check_name(filedir, strlen(filedir));
+    if(check==-1){
+        printf("invalid char detected!\n");
+        return -1;
+    }
     int point_index= strlen(filedir)-1;
     int ex_length=0;
     int mark=0;
 
     while(point_index>=0){
-        if(opendir[point_index]=='/'){
+        char cur_char=opendir[point_index];
+        if(cur_char=='/'){
             mark=1;
             break;
         }
-        if(opendir[point_index]=='.'){
+        if(cur_char=='.'){
             break;
         }
         else
@@ -231,14 +269,22 @@ int name_split(char* filedir,char* opendir,char* dir_and_filename,char* exname,c
             ex_length++;
         }
     }
-    if(point_index<=0||point_index>=strlen(filedir)-1||mark==1){
-        printf("format error!\n");
-        return -1;
+    if(flag == DATA_FILE_NAME){
+        if(point_index<=0||point_index>=strlen(filedir)-1||mark==1){
+            printf("format error!\n");
+            return -1;
+        }
+        else{
+            memcpy(dir_and_filename,filedir,point_index);
+            memcpy(exname,filedir+point_index+1,ex_length);
+        }
     }
-    memcpy(dir_and_filename,filedir,point_index);
-    memcpy(exname,filedir+point_index+1,ex_length);
-
-
+    else if(flag == DIR_FILE_NAME){
+        if(ex_length>0){
+            printf("format error!\n");
+            return -1;
+        }
+    }
     int big_length=strlen(dir_and_filename);
     int name_index=big_length-1;
     int name_length=0;
@@ -256,50 +302,25 @@ int name_split(char* filedir,char* opendir,char* dir_and_filename,char* exname,c
     memcpy(filename,dir_and_filename+name_index+1,name_length);
     return 1;
 }
-int my_open(char* filedir)
-{
-
-    char* opendir=(char*) calloc(1,80); //输入的文件路径
-    char* absolute_dir=(char*)  calloc(1,80); //文件的实际绝对路径
-    char* dir_and_filename=(char*)  calloc(1,80); //去除.和后缀名
-    char* exname=(char*)  calloc(1,80);//后缀名
-    char* filename=(char*)  calloc(1,80);//文件名
-
-    int ret=name_split(filedir,opendir,dir_and_filename,exname,filename);
-    if(ret==-1){
-        printf("open fail!\n");
-        return -1;
-    }
-
-    fcb* fcb_buff=(fcb*) calloc(1,MAX_TEXT_SIZE);
-
-
-    if(strcmp(exname,"dir")){
-        printf("can not open file with extend name \".dir\", open faile!\n");
-        return -1;
-    }
-
+int go_to_dir(char* dir_and_filename,char* filename,fcb* fcb_buff){
     int dir_length;
-    int dir_fd;
+    int start_block;
 
     if(dir_and_filename[0]=='/') { //如果是绝对路径
-        dir_fd=0;
-        strncat(absolute_dir,dir_and_filename,strlen(dir_and_filename));
+        start_block=ROOT_BLOCK_INDEX;
+        dir_length=MAX_BLOCK_FCB_NUM;
     }
     else{
-        dir_fd=curfd;
-
-        strcpy(absolute_dir,open_file_list[dir_fd].dir);
-        strcat(absolute_dir,"/");
-        strncat(absolute_dir,opendir,strlen(opendir));
+        start_block=open_file_list[curfd].first_block;
+        dir_length=open_file_list[curfd].length;
     }
-    dir_length=open_file_list[dir_fd].length;
+
     char* dir= strtok(dir_and_filename,"/");
     int fcb_index=-1;
 
     while(strcmp(dir,filename)!=0){  //定位到文件目录
 
-        do_read(dir_fd,dir_length,(char*)fcb_buff);
+        do_read(0,start_block,dir_length,fcb_buff);
 
         for(int i=0; i < dir_length ; i++){ //在fcb列表中找到目录fcb
             if(strcmp(fcb_buff[i].filename,dir)==0&&strcmp(fcb_buff[i].exname,"dir")==0&&fcb_buff[i].attribute==0){
@@ -313,9 +334,50 @@ int my_open(char* filedir)
         }
         else{
             dir_length=fcb_buff[fcb_index].length;
+            start_block=fcb_buff[fcb_index].first_block;
         }
         dir= strtok(NULL,"/");
+
         memset(fcb_buff,0,MAX_TEXT_SIZE);
+    }
+    return dir_length;
+}
+int my_open(char* filedir)
+{
+
+    char* opendir=(char*) calloc(1,80); //输入的文件路径
+    char* absolute_dir=(char*)  calloc(1,80); //文件的实际绝对路径
+    char* dir_and_filename=(char*)  calloc(1,80); //去除.和后缀名
+    char* exname=(char*)  calloc(1,80);//后缀名
+    char* filename=(char*)  calloc(1,80);//文件名
+
+    int ret=name_split(filedir, opendir, dir_and_filename, exname, filename, DATA_FILE_NAME);
+    if(ret==-1){
+        printf("open fail!\n");
+        return -1;
+    }
+    if(strcmp(filename,"..")==0){
+        printf("invalid filename, open fail!\n");
+        return -1;
+    }
+
+    fcb* fcb_buff=(fcb*) calloc(1,MAX_TEXT_SIZE);
+
+
+    if(strcmp(exname,"dir")){
+        printf("can not open file with extend name \".dir\", open faile!\n");
+        return -1;
+    }
+
+    int dir_length=go_to_dir(dir_and_filename,filename,fcb_buff);
+
+    if(dir_and_filename[0]=='/') { //如果是绝对路径
+        strncat(absolute_dir,dir_and_filename,strlen(dir_and_filename));
+    }
+    else{
+        strcpy(absolute_dir,open_file_list[curfd].dir);
+        strcat(absolute_dir,"/");
+        strncat(absolute_dir,opendir,strlen(opendir));
     }
     //定位完了，此时从dir_buff中查找filename  dir_buff就是需要打开的文件的目录文件的所有内容
     int file_index;
@@ -461,13 +523,12 @@ int do_write(int fd, char* text, int tot_len, int write_method)
     free(buff);
 }
 
-int do_read(int fd, int tot_len, char* text)
+int do_read(int offset,int start_block, int tot_len, char* text)
 {
-    int read_length=tot_len;
     fat* fat1=(fat*)FAT1_PTR;
-    int offset=open_file_list[fd].rw_ptr;
+
     int rw_offset=0;
-    int start_block=open_file_list[fd].first_block;
+
 
     while(offset>=BLOCK_SIZE)
     {
@@ -503,8 +564,7 @@ int do_read(int fd, int tot_len, char* text)
         memset(buff,0,BLOCK_SIZE);
     }
     free(buff);
-    open_file_list[fd].rw_ptr+=rw_offset;
-    return read_length;
+    return rw_offset;
 }
 int my_read(int fd,int len)
 {
@@ -519,7 +579,8 @@ int my_read(int fd,int len)
     {
         len = open_file_list[fd].length;
     }
-    do_read(fd,len,text);
+    int rw_offset=do_read(open_file_list[fd].rw_ptr,open_file_list[fd].first_block,len,text);
+    open_file_list[fd].rw_ptr+=rw_offset;
     printf("%s\n",text);
     return 1;
 }
