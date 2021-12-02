@@ -21,7 +21,7 @@
 #define getPtr_of_vDrive(n) (my_vdrive+(n-1)*BLOCK_SIZE)
 #define FAT1_PTR (fat*)getPtr_of_vDrive(2)
 #define FAT2_PTR (fat*)getPtr_of_vDrive(4)
-#define ROOT_BLOCK_INDEX 6
+#define ROOT_BLOCK_INDEX 5
 #define DIR_FILE_NAME 1
 #define DATA_FILE_NAME 0
 
@@ -85,7 +85,7 @@ int get_free_block();
 int get_free_fd();
 int my_open(char* filedir);
 int my_write(int fd);
-int name_split(char* filedir,char* opendir,char* dir_and_filename,char* exname,char* filename,int flag);
+int name_split(char* filedir,char* dir_and_filename,char* exname,char* filename,int flag);
 int check_name(char* name,int length);
 int go_to_dir(char* dir_and_filename,char* filename,fcb* fcb_buff);
 

@@ -65,7 +65,7 @@ void  my_format()
 
     strcpy(boot_block->id,"myownsys");
     strcpy(boot_block->information,"123123123");
-    boot_block->root=5;
+    boot_block->root=ROOT_BLOCK_INDEX;
     boot_block->startblock_ptr=getPtr_of_vDrive(6);
 
     fat* fat1;
@@ -124,13 +124,12 @@ int my_cd(char* dirname)
         printf("can not cd in data file, cd fail!\n");
         return -1;
     }
-    char* cd_dir=(char*) calloc(1,80); //输入的文件路径
     char* absolute_dir=(char*)  calloc(1,80); //文件的实际绝对路径
     char* name_before_point=(char*)  calloc(1,80); //去除.和后缀名
     char* exname=(char*)  calloc(1,80);//后缀名
     char* filename=(char*)  calloc(1,80);//文件名
 
-    int ret= name_split(dirname,cd_dir,name_before_point,exname,filename,DIR_FILE_NAME);
+    int ret= name_split(dirname,name_before_point,exname,filename,DIR_FILE_NAME);
     if(ret==-1){
         printf("cd fail!\n");
         return -1;
@@ -165,12 +164,11 @@ int my_create(char* filedir)
         return -1;
     }
 
-    char* opendir=(char*) calloc(1,80); //输入的文件路径
     char* dir_and_filename=(char*)  calloc(1,80); //去除.和后缀名
     char* exname=(char*)  calloc(1,80);//后缀名
     char* filename=(char*)  calloc(1,80);//文件名
 
-    int ret=name_split(filedir, opendir, dir_and_filename, exname, filename, DATA_FILE_NAME);
+    int ret=name_split(filedir, dir_and_filename, exname, filename, DATA_FILE_NAME);
     if(ret==-1){
         printf("create fail!\n");
         return -1;
@@ -222,16 +220,69 @@ int my_create(char* filedir)
     buff[fcb_index].free = 1;
     buff[fcb_index].length = 0;
     buff[fcb_index].attribute = 1;
+
     open_file_list[curfd].length+=sizeof (fcb);
 
     do_write(curfd,(char*)(buff+fcb_index),sizeof(fcb),1);
 
+    if(buff[1].first_block==ROOT_BLOCK_INDEX)  //如果当前目录是根目录，则..项的fcb也要修改
+    {
+        buff[0].length+=sizeof (fcb);
+        buff[1].length+=sizeof (fcb);
+    }
+    {
+        buff[0].length+=sizeof (fcb);
+    }
     open_file_list[curfd].rw_ptr=0;
     open_file_list[curfd].fcbstate=1;
 
+    free(dir_and_filename);
+    free(exname);
+    free(filename);
 }
-void my_rm()
+int my_rm(char* filedir) //只能删除数据文件
 {
+    if(open_file_list[curfd].attribute==1){
+        printf("can not rm in a non-dir file, rm fail!\n");
+        return -1;
+    }
+    char* dir_and_filename=(char*)  calloc(1,80); //去除.和后缀名
+    char* exname=(char*)  calloc(1,80);//后缀名
+    char* filename=(char*)  calloc(1,80);//文件名
+
+    int ret=name_split(filedir, dir_and_filename, exname, filename, DATA_FILE_NAME);
+    if(ret==-1){
+        printf("rm fail!\n");
+        return -1;
+    }
+    if(strcmp(filename,"..")==0|| strcmp(filename,"")==0){
+        printf("invalid filename, open fail!\n");
+        return -1;
+    }
+    if(strcmp(exname,"dir")==0){
+        printf("can not rm file with extend name \".dir\", rm fail!\n");
+        return -1;
+    }
+    fcb* fcb_buff=(fcb*) calloc(1,MAX_TEXT_SIZE);
+
+    int dir_length= go_to_dir(dir_and_filename,filename,fcb_buff);
+    int fcb_index=-1;
+
+    for(int i=0;i<dir_length;i++){
+        if(strcmp(fcb_buff[i].filename,filename)==0&& strcmp(fcb_buff[i].exname,exname)==0&&fcb_buff[i].attribute==0){
+            fcb_index=i;
+            break;
+        }
+    }
+    if(fcb_index==-1){
+        printf("no such file ,rm fail!\n");
+        return -1;
+    }
+
+    for(int i=fcb_index;i<dir_length;i++){
+        memcpy((fcb*)(fcb_buff+i),(fcb*)(fcb_buff+i+1),sizeof (fcb));
+    }
+
 
 }
 int check_name(char* name,int length){
@@ -242,7 +293,7 @@ int check_name(char* name,int length){
     }
     return 1;
 }
-int name_split(char* filedir,char* opendir,char* dir_and_filename,char* exname,char* filename,int flag)
+int name_split(char* filedir,char* dir_and_filename,char* exname,char* filename,int flag)
 {
     int check;
     check=check_name(filedir, strlen(filedir));
@@ -255,7 +306,7 @@ int name_split(char* filedir,char* opendir,char* dir_and_filename,char* exname,c
     int mark=0;
 
     while(point_index>=0){
-        char cur_char=opendir[point_index];
+        char cur_char=filedir[point_index];
         if(cur_char=='/'){
             mark=1;
             break;
@@ -285,6 +336,7 @@ int name_split(char* filedir,char* opendir,char* dir_and_filename,char* exname,c
             return -1;
         }
     }
+
     int big_length=strlen(dir_and_filename);
     int name_index=big_length-1;
     int name_length=0;
@@ -345,18 +397,17 @@ int go_to_dir(char* dir_and_filename,char* filename,fcb* fcb_buff){
 int my_open(char* filedir)
 {
 
-    char* opendir=(char*) calloc(1,80); //输入的文件路径
     char* absolute_dir=(char*)  calloc(1,80); //文件的实际绝对路径
     char* dir_and_filename=(char*)  calloc(1,80); //去除.和后缀名
     char* exname=(char*)  calloc(1,80);//后缀名
     char* filename=(char*)  calloc(1,80);//文件名
 
-    int ret=name_split(filedir, opendir, dir_and_filename, exname, filename, DATA_FILE_NAME);
+    int ret=name_split(filedir, dir_and_filename, exname, filename, DATA_FILE_NAME);
     if(ret==-1){
         printf("open fail!\n");
         return -1;
     }
-    if(strcmp(filename,"..")==0){
+    if(strcmp(filename,"..")==0|| strcmp(filename,"")==0){
         printf("invalid filename, open fail!\n");
         return -1;
     }
@@ -377,16 +428,17 @@ int my_open(char* filedir)
     else{
         strcpy(absolute_dir,open_file_list[curfd].dir);
         strcat(absolute_dir,"/");
-        strncat(absolute_dir,opendir,strlen(opendir));
+        strncat(absolute_dir,filedir,strlen(filedir));
     }
     //定位完了，此时从dir_buff中查找filename  dir_buff就是需要打开的文件的目录文件的所有内容
     int file_index;
-    for(int i=0;i<dir_length;i++){
+    for(int i=0;i<dir_length;){
         if(strcmp(fcb_buff[i].filename,filename)==0&& strcmp(fcb_buff[i].exname,exname)==0&&fcb_buff[i].attribute==1){
             file_index=i;
             break;
         }
     }
+
     int new_fd=get_free_fd();
     if(new_fd==-1){
         printf("can not open, open file list is full!\n");
@@ -405,7 +457,6 @@ int my_open(char* filedir)
         open_file_list[new_fd].fcbstate=0;
         open_file_list[new_fd].topenfile=1;
     }
-    free(opendir);
     free(absolute_dir);
     free(fcb_buff);
     free(exname);
