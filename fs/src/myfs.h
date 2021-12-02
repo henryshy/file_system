@@ -41,8 +41,9 @@ typedef struct FCB{   //32B
     u16_t first_block; //2B
     u32_t length;  //4B
     u8_t attribute;// 1B
-    u8_t free;
-    u8_t reserve[9]; //保留9B 凑32B
+    u8_t free;  //标记整个是否为空 0空 1不空
+    u8_t is_open; //标记文件是否已经打开  0没打开 1已打开
+    u8_t reserve[8]; //保留8B 凑32B
 }fcb;
 
 
@@ -78,16 +79,17 @@ extern u8_t buff[vDRIVE_SIZE];  //文件系统缓冲区
 
 void parse_command();
 void startsys();
-int do_write(int fd, char* text, int tot_len, int write_method);
+int do_write(int start_block,int offset, char* text, int tot_len);
 int do_read(int offset,int start_block, int tot_len, char* text);
 void my_format();
 int get_free_block();
 int get_free_fd();
 int my_open(char* filedir);
 int my_write(int fd);
-int name_split(char* filedir,char* dir_and_filename,char* exname,char* filename,int flag);
+int name_split(char* filedir,char* dir_and_filename,char* exname,char* filename);
 int check_name(char* name,int length);
 int go_to_dir(char* dir_and_filename,char* filename,fcb* fcb_buff);
-
+int my_rm(char* filedir); //只能删除数据文件
+int my_create(char* filedir);
 
 #endif //FS_MYFS_H
