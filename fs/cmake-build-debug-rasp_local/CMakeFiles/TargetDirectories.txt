@@ -1,0 +1,3 @@
+/home/pi/Desktop/clion/fs/cmake-build-debug-rasp_local/CMakeFiles/rebuild_cache.dir
+/home/pi/Desktop/clion/fs/cmake-build-debug-rasp_local/CMakeFiles/fs.dir
+/home/pi/Desktop/clion/fs/cmake-build-debug-rasp_local/CMakeFiles/edit_cache.dir

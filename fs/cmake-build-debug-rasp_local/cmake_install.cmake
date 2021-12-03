@@ -1,4 +1,4 @@
-# Install script for directory: /home/pi/Desktop/fs
+# Install script for directory: /home/pi/Desktop/clion/fs
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/pi/Desktop/fs/cmake-build-debug-raspberry/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/pi/Desktop/clion/fs/cmake-build-debug-rasp_local/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

@@ -1,3 +1,0 @@
-/home/pi/Desktop/fs/cmake-build-debug-raspberry/CMakeFiles/rebuild_cache.dir
-/home/pi/Desktop/fs/cmake-build-debug-raspberry/CMakeFiles/fs.dir
-/home/pi/Desktop/fs/cmake-build-debug-raspberry/CMakeFiles/edit_cache.dir

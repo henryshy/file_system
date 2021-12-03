@@ -9,7 +9,7 @@
 #include "string.h"
 #include "time.h"
 
-#define FILENAME "myfs.txt"
+#define FILENAME "123.txt"
 #define BLOCK_SIZE 1024
 #define vDRIVE_SIZE 1024000
 #define END_OF_FILE 65535
@@ -21,9 +21,8 @@
 #define getPtr_of_vDrive(n) (my_vdrive+(n-1)*BLOCK_SIZE)
 #define FAT1_PTR (fat*)getPtr_of_vDrive(2)
 #define FAT2_PTR (fat*)getPtr_of_vDrive(4)
-#define ROOT_BLOCK_INDEX 5
-#define DIR_FILE_NAME 1
-#define DATA_FILE_NAME 0
+#define ROOT_BLOCK_INDEX 6
+
 
 typedef unsigned char u8_t;
 typedef unsigned short u16_t;
@@ -43,7 +42,7 @@ typedef struct FCB{   //32B
     u8_t attribute;// 1B
     u8_t free;  //标记整个是否为空 0空 1不空
     u8_t is_open; //标记文件是否已经打开  0没打开 1已打开
-    u8_t reserve[8]; //保留8B 凑32B
+    u8_t reserve[4]; //保留8B 凑32B
 }fcb;
 
 
@@ -63,19 +62,17 @@ typedef struct USEROPEN{
     u8_t topenfile;
 }useropen;
 
-typedef struct BLOCK0{  //5B
+typedef struct BLOCK0{
     u8_t id[8];
     u8_t information[200];
-    u16_t root;
+    u8_t root_dir_name[20];
+    u16_t root_block;
     u8_t* startblock_ptr;
 }block0;
 
 extern u8_t* my_vdrive;
 extern useropen open_file_list[MAX_OPEN_FILE];
 extern int curfd;
-extern u8_t current_dir[80];
-extern u8_t* data_start_ptr;
-extern u8_t buff[vDRIVE_SIZE];  //文件系统缓冲区
 
 void parse_command();
 void startsys();
@@ -91,5 +88,8 @@ int check_name(char* name,int length);
 int go_to_dir(char* dir_and_filename,char* filename,fcb* fcb_buff);
 int my_rm(char* filedir); //只能删除数据文件
 int my_create(char* filedir);
+int my_close(int fd);
+void my_ls();
+void exitsys();
 
 #endif //FS_MYFS_H

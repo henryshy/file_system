@@ -4,7 +4,11 @@
 int main() {
     startsys();
 
-    my_open(".");
-    my_write(1);
+    my_create("123.txt");
+    my_open("123.txt");
+    my_write(curfd);
+    my_close(curfd);
+    my_ls();
+    exitsys();
     return 0;
 }

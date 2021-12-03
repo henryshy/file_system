@@ -1,3 +1,0 @@
-/tmp/tmp.MV1pMsxnYq/cmake-build-debug-rasp2/CMakeFiles/rebuild_cache.dir
-/tmp/tmp.MV1pMsxnYq/cmake-build-debug-rasp2/CMakeFiles/fs.dir
-/tmp/tmp.MV1pMsxnYq/cmake-build-debug-rasp2/CMakeFiles/edit_cache.dir

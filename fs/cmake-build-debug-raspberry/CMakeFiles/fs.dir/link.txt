@@ -1,1 +1,0 @@
-/usr/bin/cc -g   CMakeFiles/fs.dir/main.c.o CMakeFiles/fs.dir/src/myfs.c.o  -o fs 

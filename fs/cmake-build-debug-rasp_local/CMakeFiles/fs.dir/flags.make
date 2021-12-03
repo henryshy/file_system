@@ -6,5 +6,5 @@ C_FLAGS = -g   -std=gnu11
 
 C_DEFINES = 
 
-C_INCLUDES = -I/home/pi/Desktop/fs/src 
+C_INCLUDES = -I/home/pi/Desktop/clion/fs/src 
 
