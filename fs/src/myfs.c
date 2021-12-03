@@ -3,14 +3,139 @@
 u8_t* my_vdrive; //虚拟磁盘起始地址
 useropen open_file_list[MAX_OPEN_FILE];
 int curfd;
-void parse_command()
-{
+void parse_command() {
+    char cmd[15][10] = {"mkdir", "rmdir", "ls", "cd", "create", "rm", "open", "close", "write", "read", "exit", "help"};
+    char command[50];
+    while (1) {
+        printf("%s> ", open_file_list[curfd].dir);
+        fgets(command, 50, stdin);
 
+        if (strcmp(command, "") == 0) {
+            continue;
+        }
+        command[strlen(command) - 1] = '\0';
+        char *sp;
+        int indexOfCmd = -1;
+        if (strcmp(command, "")) {       // 不是空命令
+            sp = strtok(command, " ");  // 把空格前的命令分离出来
+            //printf("%s\n",sp);
+            for (int i = 0; i < 15; i++) {
+                if (strcmp(sp, cmd[i]) == 0) {
+                    indexOfCmd = i;
+                    break;
+                }
+            }
+            int ret=0;
+            switch (indexOfCmd) {
+                case 0:         // mkdir
+                    sp = strtok(NULL, " ");
+                    //printf("%s\n",sp);
+                    if (sp != NULL)
+                        my_mkdir(sp);
+                    else
+                        error("mkdir");
+                    break;
+                case 1:         // rmdir
+                    sp = strtok(NULL, " ");
+                    if (sp != NULL)
+                        my_rmdir(sp);
+                    else
+                        error("rmdir");
+                    break;
+                case 2:         // ls
+                    my_ls();
+                    break;
+                case 3:         // cd
+                    sp = strtok(NULL, " ");
+                    if (sp != NULL) {
+                        ret = my_cd(sp);
+                        if(ret==-1){
+                            continue;
+                        }
+                    }
+                    else
+                        error("cd");
+                    break;
+                case 4:         // create
+                    sp = strtok(NULL, " ");
+                    if (sp != NULL) {
+                        ret = my_create(sp);
+                        if(ret==-1){
+                            continue;
+                        }
+                    }
+                    else
+                        error("create");
+                    break;
+                case 5:         // rm
+                    sp = strtok(NULL, " ");
+                    if (sp != NULL) {
+                        ret = my_rm(sp);
+                        if(ret==-1){
+                            continue;
+                        }
+                    }
+                    else
+                        error("rm");
+                    break;
+                case 6:         // open
+                    sp = strtok(NULL, " ");
+                    if (sp != NULL)
+                        my_open(sp);
+                    else
+                        error("open");
+                    break;
+                case 7:         // close
+                    if (sp != NULL) {
+                        ret = my_close(sp);
+                        if(ret==-1){
+                            continue;
+                        }
+                    }
+                    else
+                        error("close");
+                    break;
+                case 8:         // write
+
+                    ret=my_write(curfd);
+
+                    break;
+                case 9:         // read
+                    sp = strtok(NULL, " ");
+                    int length = 0;
+                    if (sp != NULL) {
+                        for (int i = 0; i < strlen(sp); i++)
+                            length = length * 10 + sp[i] - '0';
+                    }
+                    if (length == 0)
+                        error("read");
+                    else
+                        my_read(curfd, length);
+                    break;
+
+                case 10:        // exit
+                    exitsys();
+                    printf("exiting file system\n");
+                    return;
+                    break;
+                case 11:        // help
+                    show_help();
+                    break;
+                default:
+                    printf("没有 %s 这个命令\n", sp);
+                    break;
+            }
+        }
+    }
+}
+void error(char *command){
+    printf("%s : argument error\n", command);
+    printf("use command help for usage\n");
 }
 void startsys()
 {
     my_vdrive=(u8_t*) calloc(1,vDRIVE_SIZE); //内存空间
-    FILE * fp= fopen("123.txt","wt+");
+    FILE * fp= fopen(FILENAME,"r");
     if(fp!=NULL)
     {
         fread(my_vdrive,vDRIVE_SIZE,1,fp);
@@ -50,7 +175,7 @@ void startsys()
     curfd=0;
 
 }
-void exitsys()
+void  exitsys()
 {
     for(int i=0;i<MAX_OPEN_FILE;i++){
         if(open_file_list[i].topenfile!=0&&open_file_list[i].attribute==1){
@@ -117,7 +242,7 @@ void  my_format()
     memcpy(root2, root1, sizeof(fcb));
     strcpy(root2->filename, "..");
 
-    FILE *fp = fopen(FILENAME, "w");
+    FILE *fp = fopen(FILENAME, "w+");
     fwrite(my_vdrive, vDRIVE_SIZE, 1, fp);
     fclose(fp);
 
@@ -169,7 +294,7 @@ int my_cd(char* dirname)
     else
     {
         strcpy(absolute_dir,open_file_list[curfd].dir);
-        strncat(absolute_dir,'/',1);
+        strcat(absolute_dir,"/");
         strncat(absolute_dir,dir_and_filename, strlen(dir_and_filename));
     }
 
@@ -485,11 +610,11 @@ int go_to_dir(char* dir_and_filename,char* filename,fcb* fcb_buff){
     int fcb_index=-1;
     if(strcmp(dir,filename)==0){
         memset(fcb_buff,0,MAX_TEXT_SIZE);
-        do_read(0, start_block, fcb_count*sizeof (fcb), fcb_buff);
+        do_read(0, start_block, fcb_count*sizeof (fcb), (char*)fcb_buff);
     }
     while(strcmp(dir,filename)!=0){  //定位到文件目录
         memset(fcb_buff,0,MAX_TEXT_SIZE);
-        do_read(0, start_block, fcb_count, fcb_buff);
+        do_read(0, start_block, fcb_count, (char*)fcb_buff);
 
         for(int i=0; i < fcb_count ; i++){ //在fcb列表中找到目录fcb
             if(strcmp(fcb_buff[i].filename,dir)==0&&strcmp(fcb_buff[i].exname,"dir")==0&&fcb_buff[i].attribute==0){
@@ -691,17 +816,17 @@ int my_write(int fd)
         return -1;
     }
     char* write_txt=(char*) calloc(1,MAX_TEXT_SIZE);
-    int write_length=0;
+    u32_t write_length=0;
 
     printf("input text:\n");
 
-    int ch;
-
+    int ch=EOF;
+    ch=getchar();
     while (ch!=EOF){
+        write_txt[write_length++]=(char)ch;
         ch=getchar();
-        write_txt[write_length++]=ch;
-
     }
+
 
     write_length= strlen(write_txt);
     int offset=open_file_list[fd].rw_ptr;

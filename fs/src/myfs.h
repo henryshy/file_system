@@ -16,7 +16,7 @@
 #define FREE_BLOCK 0
 #define MAX_TEXT_SIZE 1024000
 #define MAX_OPEN_FILE 10
-#define MAX_BLOCK_FCB_NUM 32
+
 
 #define getPtr_of_vDrive(n) (my_vdrive+(n-1)*BLOCK_SIZE)
 #define FAT1_PTR (fat*)getPtr_of_vDrive(2)
@@ -91,5 +91,10 @@ int my_create(char* filedir);
 int my_close(int fd);
 void my_ls();
 void exitsys();
+int my_read(int fd,int len);
+void my_mkdir(char* dirname);
+void my_rmdir(char *dirname);
+int my_cd(char* dirname);
+void error(char *command);
 
 #endif //FS_MYFS_H

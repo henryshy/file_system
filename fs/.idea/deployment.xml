@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData" autoUpload="Always" remoteFilesAllowedToDisappearOnAutoupload="false" showAutoUploadSettingsWarning="false">
     <serverData>
       <paths name="rasp_local (e0a368af-5661-4f49-9104-f99eacf5bf73)">
         <serverdata>
@@ -8,6 +8,8 @@
             <mapping deploy="/home/pi/Desktop/clion/fs" local="$PROJECT_DIR$" />
           </mappings>
           <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-mingw" />
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-rasp_local" />
             <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-rasp_local" />
           </excludedPaths>
         </serverdata>
