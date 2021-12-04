@@ -119,7 +119,7 @@ void parse_command() {
                     return;
                     break;
                 case 11:        // help
-                    show_help();
+                    //show_help();
                     break;
                 default:
                     printf("没有 %s 这个命令\n", sp);
@@ -820,15 +820,19 @@ int my_write(int fd)
 
     printf("input text:\n");
 
-    int ch=EOF;
-    ch=getchar();
-    while (ch!=EOF){
-        write_txt[write_length++]=(char)ch;
-        ch=getchar();
-    }
+//    int ch=EOF;
+//    ch=getchar();
+//    while (ch!=EOF){
+//        write_txt[write_length++]=(char)ch;
+//        ch=getchar();
+//    }
+    fgets(write_txt,MAX_TEXT_SIZE,stdin);
+
 
 
     write_length= strlen(write_txt);
+    write_txt[write_length--]='\0';
+
     int offset=open_file_list[fd].rw_ptr;
     int write_block=open_file_list[fd].first_block;
     fat* fat1=(fat*)FAT1_PTR;
@@ -843,12 +847,7 @@ int my_write(int fd)
             break;
         case 2:
             open_file_list[fd].length=open_file_list[fd].rw_ptr+write_length>open_file_list[fd].length?(open_file_list[fd].rw_ptr+write_length):open_file_list[fd].length;
-
-            while(offset>=BLOCK_SIZE){
-                offset-=BLOCK_SIZE;
-                write_block=fat1[write_block].index;
-            }
-            do_write(write_block,offset,write_txt,write_length);
+            do_write(write_block,offset,write_txt,write_length);//offset=rw_ptr,即从文件开始处写
             break;
         case 3:
             while (fat1[write_block].index != END_OF_FILE){
@@ -856,7 +855,7 @@ int my_write(int fd)
             }
             offset=(open_file_list[fd].length)%BLOCK_SIZE;
             do_write(write_block,offset,write_txt,write_length);
-            open_file_list[fd].length+=write_length-1;
+            open_file_list[fd].length+=write_length;
             break;
     }
 
@@ -909,6 +908,7 @@ int do_write(int start_block,int offset, char* text, int tot_len)
         memset(block_buff, 0, BLOCK_SIZE);
     }
     free(block_buff);
+    return write_len;
 }
 
 int do_read(int offset,int start_block, int tot_len, char* text)
@@ -962,9 +962,10 @@ int my_read(int fd,int len)
     {
         len = open_file_list[fd].length;
     }
-    int rw_offset=do_read(open_file_list[fd].rw_ptr,open_file_list[fd].first_block,len,text);
+    int rw_offset=do_read(0,open_file_list[fd].first_block,len,text);
     open_file_list[fd].rw_ptr+=rw_offset;
-    printf("%s\n",text);
+    printf("read: %s\n",text);
+
     return 1;
 }
 int get_free_block()
