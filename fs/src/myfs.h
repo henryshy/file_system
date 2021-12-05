@@ -41,8 +41,7 @@ typedef struct FCB{   //32B
     u32_t length;  //4B
     u8_t attribute;// 1B
     u8_t free;  //标记整个是否为空 0空 1不空
-    u8_t is_open; //标记文件是否已经打开  0没打开 1已打开
-    u8_t reserve[4]; //保留8B 凑32B
+    u8_t reserve[5]; //保留8B 凑32B
 }fcb;
 
 
@@ -72,12 +71,13 @@ typedef struct BLOCK0{
 
 extern u8_t* my_vdrive;
 extern useropen open_file_list[MAX_OPEN_FILE];
-extern int curfd;
+extern useropen cur_dir;
+extern char* file_buff_ptr[MAX_OPEN_FILE];
 
 void parse_command();
 void startsys();
 int do_write(int start_block,int offset, char* text, int tot_len);
-int do_read(int offset,int start_block, int tot_len, char* text);
+int do_read(int offset,int start_block, int tot_len, char* read_buff);
 void my_format();
 int get_free_block();
 int get_free_fd();
