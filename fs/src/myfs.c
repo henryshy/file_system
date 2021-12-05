@@ -6,6 +6,7 @@ int curfd;
 void parse_command() {
     char cmd[15][10] = {"mkdir", "rmdir", "ls", "cd", "create", "rm", "open", "close", "write", "read", "exit", "help"};
     char command[50];
+
     while (1) {
         printf("%s> ", open_file_list[curfd].dir);
         fgets(command, 50, stdin);
@@ -122,7 +123,7 @@ void parse_command() {
                     //show_help();
                     break;
                 default:
-                    printf("没有 %s 这个命令\n", sp);
+                    printf("command not found\n", sp);
                     break;
             }
         }
@@ -344,7 +345,6 @@ void my_ls()
             }
             else{
                 unsigned int length = fcb_buff[i].length;
-                if(length != 0)length -= 1;
                 printf("%s.%s\t%dB\t<File>\t%d/%d/%d\t%02d:%02d:%02d\n",
                        fcb_buff[i].filename,
                        fcb_buff[i].exname,
