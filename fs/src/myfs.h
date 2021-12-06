@@ -54,12 +54,13 @@ typedef struct USEROPEN{
     u16_t date;
     u16_t first_block;
     u64_t length;
-    char* file_buff;
+
     u8_t attribute;  // 0:目录 1:数据文件
     u8_t dir[80]; //当前打开文件的绝对路径
     u32_t rw_ptr;
-    u8_t fcbstate; //0:未修改 1：截断写 2：覆盖写 3：追加写
+    u8_t fcbstate;
     u8_t topenfile;
+    char* file_buff;
 }useropen;
 
 typedef struct BLOCK0{
@@ -67,7 +68,7 @@ typedef struct BLOCK0{
     u8_t information[200];
     u8_t root_dir_name[20];
     u16_t root_block;
-    u8_t* startblock_ptr;
+
 }block0;
 
 extern char* my_vdrive;
@@ -92,10 +93,12 @@ int my_create(char* filedir);
 int my_close(int fd);
 void my_ls();
 void exitsys();
-int my_read(int fd,int len);
-void my_mkdir(char* dirname);
+int my_read(int fd);
+int my_mkdir(char* dirname);
 void my_rmdir(char *dirname);
 int my_cd(char* dirname);
 void error(char *command);
+void print_opended();
+void show_help();
 
 #endif //FS_MYFS_H

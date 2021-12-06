@@ -4,13 +4,11 @@ char* my_vdrive; //虚拟磁盘起始地址
 useropen open_file_list[MAX_OPEN_FILE];
 useropen cur_dir;
 char* buff;
-
 void parse_command() {
-    char cmd[15][10] = {"mkdir", "rmdir", "ls", "cd", "create", "rm", "open", "close", "write", "read", "exit", "help"};
+    char cmd[15][10] = {"mkdir", "rmdir", "ls", "cd", "create", "rm", "open", "close", "write", "read", "exit", "help","printopen"};
     char command[50];
-
     while (1) {
-        printf("%s> ", cur_dir.dir);
+        printf("%s > ", cur_dir.dir);
         fgets(command, 50, stdin);
 
         if (strcmp(command, "") == 0) {
@@ -52,75 +50,108 @@ void parse_command() {
                     sp = strtok(NULL, " ");
                     if (sp != NULL) {
                         ret = my_cd(sp);
-                        if(ret==-1){
+                        if (ret == -1) {
                             continue;
                         }
-                    }
-                    else
+                    } else {
                         error("cd");
+                    }
                     break;
                 case 4:         // create
                     sp = strtok(NULL, " ");
                     if (sp != NULL) {
                         ret = my_create(sp);
-                        if(ret==-1){
+                        if (ret == -1) {
                             continue;
                         }
+                    } else {
+                        error("cd");
                     }
-                    else
-                        error("create");
                     break;
                 case 5:         // rm
                     sp = strtok(NULL, " ");
                     if (sp != NULL) {
                         ret = my_rm(sp);
-                        if(ret==-1){
+                        if (ret == -1) {
                             continue;
                         }
-                    }
-                    else
+                    } else {
                         error("rm");
+                    }
                     break;
                 case 6:         // open
                     sp = strtok(NULL, " ");
-                    if (sp != NULL)
+                    if (sp != NULL) {
                         my_open(sp);
-                    else
+                    }
+                    else{
                         error("open");
+                    }
                     break;
                 case 7:         // close
+                    sp = strtok(NULL, " ");
                     if (sp != NULL) {
-                        ret = my_close(sp);
-                        if(ret==-1){
-                            continue;
+                        int fd;
+                        char *left;
+                        fd = strtol(sp, &left, 20);
+                        if(strcmp(left,"")==0) {
+                            my_close(fd);
+                        }
+                        else
+                        {
+                            error("close");
                         }
                     }
-                    else
+                    else{
                         error("close");
+                    }
                     break;
                 case 8:         // write
-
+                    sp = strtok(NULL, " ");
+                    if (sp != NULL) {
+                        int fd;
+                        char *left;
+                        fd = strtol(sp, &left, 20);
+                        if(strcmp(left,"")==0) {
+                            my_write(fd);
+                        }
+                        else
+                        {
+                            error("write");
+                        }
+                    }
+                    else{
+                        error("write");
+                    }
                     break;
                 case 9:         // read
                     sp = strtok(NULL, " ");
-                    int length = 0;
                     if (sp != NULL) {
-                        for (int i = 0; i < strlen(sp); i++)
-                            length = length * 10 + sp[i] - '0';
+                        int fd;
+                        char *left;
+                        fd = strtol(sp, &left, 20);
+                        if(strcmp(left,"")==0) {
+                            my_read(fd);
+                        }
+                        else
+                        {
+                            error("read");
+                        }
                     }
-                    if (length == 0)
+                    else{
                         error("read");
-                    else
-
+                    }
                     break;
-
                 case 10:        // exit
                     exitsys();
                     printf("exiting file system\n");
                     return;
                     break;
                 case 11:        // help
-                    //show_help();
+                    show_help();
+                    break;
+                case 12:
+                    print_opended();
                     break;
                 default:
                     printf("command not found\n", sp);
@@ -129,9 +160,31 @@ void parse_command() {
         }
     }
 }
+void print_opended(){
+    printf("filefd\tfilename\texname\tsize\n");
+    for(int i=0;i<MAX_OPEN_FILE;i++){
+        if(open_file_list[i].topenfile==0){
+            continue;
+        }
+        printf("%d\t%s\t%s\t%dB\n",i,open_file_list[i].filename,open_file_list[i].exname,open_file_list[i].length);
+    }
+}
+void show_help()
+{
+    printf("mkdir: make a new directory, example: mkdir /dir\n");
+    printf("rmdir: remove an existing directory, example: rmdir /dir\n");
+    printf("ls: print all files under current directory\n");
+    printf("cd: change current directory to another, example: cd /dir\n");
+    printf("create: create a non-directory file, example: create /text.txt\n");
+    printf("rm: remove a non-directory file example: rm /text.txt\n");
+    printf("open: open an existing file for further options, example: open /text.txt\n");
+    printf("read: read an opened file and print it on the screen, example: read 1\n");
+    printf("write: write an opened file, three different write styles are supported, example: write 1\n");
+    printf("exit: exit file system and save all the changes, example: exit\n");
+}
 void error(char *command){
     printf("%s : argument error\n", command);
-    printf("use command help for usage\n");
+    printf("use command help for guidance\n");
 }
 void startsys()
 {
@@ -198,8 +251,7 @@ void  my_format()
     strcpy(boot_block->id,"myownsys");
     strcpy(boot_block->information,"123123123");
     boot_block->root_block=ROOT_BLOCK_INDEX;
-    strcpy(boot_block->root_dir_name, "root");
-    boot_block->startblock_ptr=getPtr_of_vDrive(ROOT_BLOCK_INDEX);
+    strcpy(boot_block->root_dir_name, "");
 
     fat* fat1;
     fat* fat2;
@@ -254,13 +306,26 @@ void  my_format()
 
 int my_cd(char* dirname)
 {
-
+    if(strcmp(cur_dir.filename,"")==0){
+        if(strcmp(dirname,"..")==0|| strcmp(dirname,".")==0||strcmp(dirname,"/")==0){
+            return 1;
+        }
+    }
     char* absolute_dir=(char*)  calloc(1,80); //文件的实际绝对路径
     char* dir_and_filename=(char*)  calloc(1,80); //去除.和后缀名
     char* exname=(char*)  calloc(1,80);//后缀名
     char* filename=(char*)  calloc(1,80);//文件名
 
     int ret= name_split(dirname,dir_and_filename,exname,filename);
+    if(strcmp(filename,"")==0){
+        printf("invalid directory name, cd fail!\n");
+        return -1;
+    }
+    if(strcmp(exname,"")!=0){
+        printf("invalid directory name, cd fail!\n");
+        return -1;
+    }
+
     if(ret==-1){
         printf("cd fail!\n");
         return -1;
@@ -273,13 +338,14 @@ int my_cd(char* dirname)
     ret=go_to_dir(dir_and_filename,filename,fcb_buff);
     if(ret==-1){
         printf("cd fail!\n");
+        return -1;
     }
     else
     {
         fcb_count=ret/sizeof (fcb);
     }
     for(int i=0;i<fcb_count;i++){
-        if(fcb_buff[i].attribute==1&& strcmp(fcb_buff[i].filename,filename)==0){
+        if(fcb_buff[i].attribute==0&& strcmp(fcb_buff[i].filename,filename)==0){
             fcb_index=i;
             break;
         }
@@ -289,14 +355,20 @@ int my_cd(char* dirname)
         return -1;
     }
 
-    if(dirname[0]=='/'){
-        strcpy(absolute_dir,dirname);
+    if(strcmp(fcb_buff[fcb_index].filename)
+    if(dir_and_filename[0]=='/') { //如果是绝对路径
+        strcpy(absolute_dir,dir_and_filename);
     }
-    else
-    {
-        strcpy(absolute_dir,cur_dir.dir);
-        strcat(absolute_dir,"/");
-        strncat(absolute_dir,dir_and_filename, strlen(dir_and_filename));
+    else{
+        if(strcmp(cur_dir.filename,"")==0){
+            strcat(absolute_dir,"/");
+            strncat(absolute_dir,dirname,strlen(dirname));
+        }
+        else{
+            strcpy(absolute_dir,cur_dir.dir);
+            strcat(absolute_dir,"/");
+            strncat(absolute_dir,dirname,strlen(dirname));
+        }
     }
 
     strcpy(cur_dir.filename,fcb_buff[fcb_index].filename);
@@ -312,9 +384,42 @@ int my_cd(char* dirname)
     cur_dir.attribute=fcb_buff[fcb_index].attribute;
     memset((char*)buff,0,sizeof (buff));
 }
-void my_mkdir(char* dirname)
+int my_mkdir(char* dirname)
 {
+    char* absolute_dir=(char*)  calloc(1,80); //文件的实际绝对路径
+    char* dir_and_filename=(char*)  calloc(1,80); //去除.和后缀名
+    char* exname=(char*)  calloc(1,80);//后缀名
+    char* filename=(char*)  calloc(1,80);//文件名
 
+    int ret=name_split(dirname, dir_and_filename, exname, filename);
+    if(ret==-1){
+        printf("mkdir fail!\n");
+        return -1;
+    }
+    if(strcmp(filename,"..")==0|| strcmp(filename,"")==0){
+        printf("invalid filename, mkdir fail!\n");
+        return -1;
+    }
+
+    if(strcmp(exname,"")!=0){
+        printf("invalid name format, mkdir fail!\n");
+        return -1;
+    }
+    if(dir_and_filename[0]=='/') { //如果是绝对路径
+        strncat(absolute_dir,dir_and_filename,strlen(dir_and_filename));
+    }
+    else{
+        if(strcmp(cur_dir.filename,"")==0){
+            strcat(absolute_dir,"/");
+            strncat(absolute_dir,dirname,strlen(dirname));
+        }
+        else{
+            strcpy(absolute_dir,cur_dir.dir);
+            strcat(absolute_dir,"/");
+            strncat(absolute_dir,dirname,strlen(dirname));
+        }
+
+    }
 }
 void my_rmdir(char *dirname)
 {
@@ -485,7 +590,7 @@ int my_rm(char* filedir) //只能删除数据文件
         strncat(absolute_dir,dir_and_filename,strlen(dir_and_filename));
     }
     else{
-        if(strcmp(cur_dir.filename,"root")==0){
+        if(strcmp(cur_dir.filename,"")==0){
             strcat(absolute_dir,"/");
             strncat(absolute_dir,filedir,strlen(filedir));
         }
@@ -532,7 +637,6 @@ int my_rm(char* filedir) //只能删除数据文件
         return -1;
     }
 
-
     for(int i=fcb_index; i < fcb_count; i++){
         memcpy((fcb*)(fcb_buff+i),(fcb*)(fcb_buff+i+1),sizeof (fcb));
     }
@@ -564,59 +668,57 @@ int name_split(char* filedir,char* dir_and_filename,char* exname,char* filename)
         return -1;
     }
 
-
-    int point_index= -1;
-    int i= strlen(filedir);
-    int ex_length=0;
-    int point_mark=0;
-    int split_mark=0;
-    while(i>=0) {
-        if (point_mark==0&&split_mark==0) {
-            if (filedir[i] == '/') {
-                point_index= strlen(filedir);
-                break;
-            }
-            else if (filedir[i] == '.')
-            {
-                point_mark++;
-                point_index=i;
-            }
-        }
-        else if(point_mark>0){
-            if (filedir[i] == '/') {
-                break;
-            }
-            else if (filedir[i] == '.')
-            {
-                if(point_index-1==i) {
+    if(strcmp(filedir,".")==0){
+        strcpy(dir_and_filename,".");
+        strcpy(filename,".");
+        strcpy(exname,"");
+    }
+    else {
+        int point_index = -1;
+        int i = strlen(filedir);
+        int ex_length = 0;
+        int point_mark = 0;
+        int split_mark = 0;
+        while (i >= 0) {
+            if (point_mark == 0 && split_mark == 0) {
+                if (filedir[i] == '/') {
                     point_index = strlen(filedir);
+                    break;
+                } else if (filedir[i] == '.') {
+                    point_mark++;
+                    point_index = i;
                 }
-                else{
+            } else if (point_mark > 0) {
+                if (filedir[i] == '/') {
+                    break;
+                } else if (filedir[i] == '.') {
+                    if (point_index - 1 == i) {
+                        point_index = strlen(filedir);
+                    } else {
+                        break;
+                    }
                     break;
                 }
+            }
+            i--;
+        }
+        ex_length= strlen(filedir)-point_index> strlen(filedir)? strlen(filedir): strlen(filedir)-point_index;
+        memcpy(dir_and_filename,filedir,point_index>0?point_index:0);
+        memcpy(exname,filedir+point_index+1,ex_length);
+        int big_length = strlen(dir_and_filename);
+        int name_index = big_length - 1;
+        int name_length = 0;
+        while (name_index >= 0) {
+
+            if (dir_and_filename[name_index] != '/') {
+                name_index--;
+                name_length++;
+            } else {
                 break;
             }
         }
-        i--;
+        memcpy(filename, dir_and_filename + name_index + 1, name_length);
     }
-    ex_length= strlen(filedir)-point_index;
-    memcpy(dir_and_filename,filedir,point_index);
-    memcpy(exname,filedir+point_index+1,ex_length);
-    int big_length=strlen(dir_and_filename);
-    int name_index=big_length-1;
-    int name_length=0;
-    while(name_index>=0){
-
-        if(dir_and_filename[name_index]!='/'){
-            name_index--;
-            name_length++;
-        }
-        else
-        {
-            break;
-        }
-    }
-    memcpy(filename,dir_and_filename+name_index+1,name_length);
     return 1;
 }
 int go_to_dir(char* dir_and_filename,char* filename,fcb* fcb_buff){
@@ -686,11 +788,21 @@ int my_open(char* filedir)
         printf("no such file, open fail!\n");
         return -1;
     }
+    for(int i=0;i<MAX_OPEN_FILE;i++){
+        if(open_file_list[i].topenfile==0){
+            continue;
+        }
+        if(open_file_list[i].attribute==1&&strcmp(open_file_list[i].dir,absolute_dir)==0){
+            printf("file has been opened, open fail!\n");
+            return -1;
+        }
+    }
+
     if(dir_and_filename[0]=='/') { //如果是绝对路径
         strncat(absolute_dir,dir_and_filename,strlen(dir_and_filename));
     }
     else{
-        if(strcmp(cur_dir.filename,"root")==0){
+        if(strcmp(cur_dir.filename,"")==0){
             strcat(absolute_dir,"/");
             strncat(absolute_dir,filedir,strlen(filedir));
         }
@@ -702,20 +814,11 @@ int my_open(char* filedir)
 
     }
 
-    for(int i=0;i<MAX_OPEN_FILE;i++){
-        if(open_file_list[i].topenfile==0){
-            continue;
-        }
-        if(open_file_list[i].attribute==1&&strcmp(open_file_list[i].dir,absolute_dir)==0){
-            printf("file has been opened, open fail!\n");
-            return -1;
-        }
-    }
 
     fcb* fcb_buff=(fcb*) buff;
 
     if(strcmp(exname,"dir")==0){
-        printf("can not open file with extend name \".dir\", open faile!\n");
+        printf("can not open file with extend name \".dir\", open fail!\n");
         return -1;
     }
     int fcb_count=-1;
@@ -751,13 +854,13 @@ int my_open(char* filedir)
     strcpy(open_file_list[new_fd].dir,absolute_dir);
     open_file_list[new_fd].attribute=1;
     open_file_list[new_fd].rw_ptr=0;
-    open_file_list[new_fd].fcbstate=1;
+    open_file_list[new_fd].fcbstate=0;
     open_file_list[new_fd].topenfile=1;
+
     open_file_list[new_fd].file_buff=(char*) calloc(1,MAX_FILE_BUFF_SIZE);
 
 
     free(absolute_dir);
-    free(fcb_buff);
     free(exname);
     free(filename);
     free(dir_and_filename);
@@ -773,22 +876,24 @@ int get_free_fd(){
 }
 int my_close(int fd)
 {
-    if(fd<0||fd>MAX_OPEN_FILE||open_file_list[fd].topenfile==0){
-        printf("no such file, close fail!\n");
+    if(fd<0||fd>MAX_OPEN_FILE){
+        printf("fd error, close fail!\n");
+        return -1;
+    }
+    if(open_file_list[fd].topenfile==0){
+        printf("file not opened ,close fail!\n");
         return -1;
     }
     if(open_file_list[fd].attribute==0){
         printf("can not close a directory file, close fail!\n");
         return -1;
     }
-    if(open_file_list[fd].topenfile==0){
-        printf("file not opened, close fail!\n");
-        return -1;
-    }
+
     if(open_file_list[fd].fcbstate==0){
-        printf("closed %s",open_file_list[fd].dir);
-        memset(&open_file_list[fd],0,sizeof (useropen));
+        printf("closed %s\n",open_file_list[fd].dir);
         free(open_file_list[fd].file_buff);
+        memset(&open_file_list[fd],0,sizeof (useropen));
+
         return 1;
     }
     fat* fat1=FAT1_PTR;
@@ -855,6 +960,8 @@ int my_close(int fd)
     printf("closed %s\n",open_file_list[fd].dir);
     memset(&open_file_list[fd],0,sizeof (useropen));
     free(open_file_list[fd].file_buff);
+
+
 
     free(exname);
     free(filename);
@@ -978,7 +1085,7 @@ int do_read(int offset,int start_block, int tot_len, char* read_buff)//传入的off
 
     return rw_offset;
 }
-int my_read(int fd,int len)
+int my_read(int fd)
 {
     if(fd >= MAX_OPEN_FILE || fd < 0){
         printf("file not found, read fail!\n");
@@ -990,13 +1097,9 @@ int my_read(int fd,int len)
     }
     open_file_list[fd].rw_ptr = 0;
 
-    if(len > open_file_list[fd].length)
-    {
-        len = open_file_list[fd].length;
-    }
-    int rw_offset=do_read(0,open_file_list[fd].first_block,len,buff);
 
-    //open_file_list[fd].rw_ptr+=rw_offset;
+    do_read(0,open_file_list[fd].first_block,open_file_list[fd].length,buff);
+
     printf("read: %s\n",buff);
     memset(buff,0,MAX_TEXT_SIZE);
     return 1;
