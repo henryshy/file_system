@@ -10,11 +10,12 @@
 #include "time.h"
 
 #define FILENAME "123.txt"
-#define BLOCK_SIZE 1024
-#define vDRIVE_SIZE 1024000
+#define BLOCK_SIZE 1024     //1MB
+#define vDRIVE_SIZE 1024000 //1000MB
 #define END_OF_FILE 65535
 #define FREE_BLOCK 0
-#define MAX_TEXT_SIZE 1024000
+#define MAX_TEXT_SIZE 20480  //20MB
+#define MAX_FILE_BUFF_SIZE 20480 //20MB
 #define MAX_OPEN_FILE 10
 
 
@@ -53,11 +54,11 @@ typedef struct USEROPEN{
     u16_t date;
     u16_t first_block;
     u64_t length;
-
+    char* file_buff;
     u8_t attribute;  // 0:目录 1:数据文件
     u8_t dir[80]; //当前打开文件的绝对路径
     u32_t rw_ptr;
-    u8_t fcbstate;
+    u8_t fcbstate; //0:未修改 1：截断写 2：覆盖写 3：追加写
     u8_t topenfile;
 }useropen;
 
@@ -69,10 +70,10 @@ typedef struct BLOCK0{
     u8_t* startblock_ptr;
 }block0;
 
-extern u8_t* my_vdrive;
+extern char* my_vdrive;
 extern useropen open_file_list[MAX_OPEN_FILE];
 extern useropen cur_dir;
-extern char* file_buff_ptr[MAX_OPEN_FILE];
+extern char* buff;
 
 void parse_command();
 void startsys();

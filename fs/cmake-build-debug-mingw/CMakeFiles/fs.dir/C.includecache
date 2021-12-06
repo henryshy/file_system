@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+D:/embedded system/file_system/fs/src/myfs.c
+myfs.h
+D:/embedded system/file_system/fs/src/myfs.h
+
+D:/embedded system/file_system/fs/src/myfs.h
+stdio.h
+-
+stdlib.h
+D:/embedded system/file_system/fs/src/stdlib.h
+string.h
+D:/embedded system/file_system/fs/src/string.h
+time.h
+D:/embedded system/file_system/fs/src/time.h
+

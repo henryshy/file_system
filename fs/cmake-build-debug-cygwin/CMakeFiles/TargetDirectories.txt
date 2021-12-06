@@ -1,0 +1,3 @@
+/cygdrive/d/embedded system/file_system/fs/cmake-build-debug-cygwin/CMakeFiles/rebuild_cache.dir
+/cygdrive/d/embedded system/file_system/fs/cmake-build-debug-cygwin/CMakeFiles/edit_cache.dir
+/cygdrive/d/embedded system/file_system/fs/cmake-build-debug-cygwin/CMakeFiles/fs.dir
