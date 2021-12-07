@@ -1,6 +1,7 @@
 #include "myfs.h"
 
 char* my_vdrive; //虚拟磁盘起始地址
+
 useropen open_file_list[MAX_OPEN_FILE];
 useropen cur_dir;
 char* buff;
@@ -189,6 +190,7 @@ void error(char *command){
 void startsys()
 {
     my_vdrive=(u8_t*) calloc(1,vDRIVE_SIZE); //内存空间
+
     buff=(char*) calloc(1,MAX_TEXT_SIZE);
     FILE * fp= fopen(FILENAME,"r");
     if(fp!=NULL)
@@ -211,14 +213,15 @@ void startsys()
         exit(0);
     }
     block0* boot_block=(block0*)my_vdrive;
+    inode* inode_ptr=INODE_PTR;
     fcb* root_fcb=(fcb*) getPtr_of_vDrive(ROOT_BLOCK_INDEX);
 
     strcpy(cur_dir.filename,boot_block->root_dir_name);
     strcpy(cur_dir.exname,"dir");
-    cur_dir.time=root_fcb->time;
-    cur_dir.date=root_fcb->date;
+    cur_dir.time=root_fcb->fcb_inode->time;
+    cur_dir.date=root_fcb->fcb_inode->date;
     cur_dir.first_block=boot_block->root_block;
-    cur_dir.length=root_fcb->length;
+    cur_dir.length=root_fcb->fcb_inode->length;
 
     strcpy(cur_dir.dir,"/");
     strcat(cur_dir.dir,boot_block->root_dir_name);
@@ -226,8 +229,6 @@ void startsys()
     cur_dir.fcbstate = 0;
     cur_dir.topenfile = 1;
     cur_dir.attribute=0;
-
-
 
 }
 void  exitsys()
@@ -279,25 +280,28 @@ void  my_format()
     fat1[5].index=END_OF_FILE;
     fat2[5].index=END_OF_FILE;
 
-    fcb *root1 = (fcb*)getPtr_of_vDrive(ROOT_BLOCK_INDEX);
-    strcpy(root1->filename, ".");
-    strcpy(root1->exname, "dir");
-
+    inode* inode_ptr=INODE_PTR;
     time_t rawTime = time(NULL);
     struct tm *time = localtime(&rawTime);
 
-    root1->time = time->tm_hour * 2048 + time->tm_min * 32 + time->tm_sec / 2;
-    root1->date = (time->tm_year - 100) * 512 + (time->tm_mon + 1) * 32 + (time->tm_mday);
-    root1->first_block = ROOT_BLOCK_INDEX;
-    root1->attribute = 0;
-    root1->length = 2 * sizeof(fcb);
-    root1->free=1;
+    strcpy(inode_ptr->exname, "dir");
+    inode_ptr[0].time = time->tm_hour * 2048 + time->tm_min * 32 + time->tm_sec / 2;
+    inode_ptr[0].date = (time->tm_year - 100) * 512 + (time->tm_mon + 1) * 32 + (time->tm_mday);
+    inode_ptr[0].first_block = ROOT_BLOCK_INDEX;
+    inode_ptr[0].attribute = 0;
+    inode_ptr[0].length = 2 * sizeof(fcb);
+    inode_ptr[0].free=1;
+
+    fcb *root1 = (fcb*)getPtr_of_vDrive(ROOT_BLOCK_INDEX);
+    root1->fcb_inode=&inode_ptr[0];
+    strcpy(root1->filename, ".");
 
     //root2 指向根目录区的第二个fcb,即特殊目录项..,因为根目录区没有上级目录,所以指向自己
     fcb* root2 = root1 + 1;
-    memcpy(root2, root1, sizeof(fcb));
-    strcpy(root2->filename, "..");
 
+    strcpy(root2->filename, "..");
+    root2->fcb_inode=&inode_ptr[0];
+    
     FILE *fp = fopen(FILENAME, "w+");
     fwrite(my_vdrive, vDRIVE_SIZE, 1, fp);
     fclose(fp);
@@ -355,7 +359,7 @@ int my_cd(char* dirname)
         return -1;
     }
 
-    if(strcmp(fcb_buff[fcb_index].filename)
+
     if(dir_and_filename[0]=='/') { //如果是绝对路径
         strcpy(absolute_dir,dir_and_filename);
     }

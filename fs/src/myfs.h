@@ -9,43 +9,30 @@
 #include "string.h"
 #include "time.h"
 
-#define FILENAME "123.txt"
-#define BLOCK_SIZE 1024     //1MB
-#define vDRIVE_SIZE 1024000 //1000MB
-#define END_OF_FILE 65535
-#define FREE_BLOCK 0
-#define MAX_TEXT_SIZE 20480  //20MB
-#define MAX_FILE_BUFF_SIZE 20480 //20MB
-#define MAX_OPEN_FILE 10
-
-
-#define getPtr_of_vDrive(n) (my_vdrive+(n-1)*BLOCK_SIZE)
-#define FAT1_PTR (fat*)getPtr_of_vDrive(2)
-#define FAT2_PTR (fat*)getPtr_of_vDrive(4)
-#define ROOT_BLOCK_INDEX 6
-
-
 typedef unsigned char u8_t;
 typedef unsigned short u16_t;
 typedef unsigned int u32_t;
 typedef unsigned long u64_t;
-
+typedef struct inode inode;
 typedef struct FAT{ //2B
     u16_t index;
 }fat;
 typedef struct FCB{   //32B
     u8_t filename[8]; // 8B
+    inode* fcb_inode;
+}fcb;
+
+
+typedef struct inode{
     u8_t exname[3]; // 3B
+    u8_t dir[80];
     u16_t time; //2B
     u16_t date;// 2B
     u16_t first_block; //2B
     u32_t length;  //4B
     u8_t attribute;// 1B
     u8_t free;  //标记整个是否为空 0空 1不空
-    u8_t reserve[5]; //保留8B 凑32B
-}fcb;
-
-
+}inode;
 
 typedef struct USEROPEN{
     u8_t filename[8];
@@ -70,6 +57,23 @@ typedef struct BLOCK0{
     u16_t root_block;
 
 }block0;
+
+#define FILENAME "123.txt"
+#define BLOCK_SIZE 1024     //1MB
+#define vDRIVE_SIZE (DATA_AREA_SIZE+INODE_AREA_SIZE) //1000MB+80MB
+#define INODE_AREA_SIZE (sizeof(inode)*1000) //80MB左右
+#define DATA_AREA_SIZE 1024000
+#define END_OF_FILE 65535
+#define FREE_BLOCK 0
+#define MAX_TEXT_SIZE 20480  //20MB
+#define MAX_FILE_BUFF_SIZE 20480 //20MB
+#define MAX_OPEN_FILE 10
+
+#define getPtr_of_vDrive(n) (my_vdrive+(n-1)*BLOCK_SIZE)
+#define FAT1_PTR (fat*)getPtr_of_vDrive(2)
+#define FAT2_PTR (fat*)getPtr_of_vDrive(4)
+#define ROOT_BLOCK_INDEX 6
+#define INODE_PTR (inode*)getPtr_of_vDrive(1000)
 
 extern char* my_vdrive;
 extern useropen open_file_list[MAX_OPEN_FILE];
