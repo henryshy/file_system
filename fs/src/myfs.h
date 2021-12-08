@@ -17,9 +17,9 @@ typedef struct inode inode;
 typedef struct FAT{ //2B
     u16_t index;
 }fat;
-typedef struct FCB{   //32B
+typedef struct FCB{   //16B
     u8_t filename[8]; // 8B
-    inode* fcb_inode;
+    inode* fcb_inode; //8B
 }fcb;
 
 
@@ -91,7 +91,7 @@ int my_open(char* filedir);
 int my_write(int fd);
 int name_split(char* filedir,char* dir_and_filename,char* exname,char* filename);
 int check_name(char* name,int length);
-int go_to_dir(char* dir_and_filename,char* filename,fcb* fcb_buff);
+int go_to_dir(char* dir_and_filename,char* exname,fcb* fcb_buff);
 int my_rm(char* filedir); //只能删除数据文件
 int my_create(char* filedir);
 int my_close(int fd);

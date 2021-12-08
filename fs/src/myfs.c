@@ -436,32 +436,32 @@ void my_ls()
     do_read(0,cur_dir.first_block,cur_dir.length,(char*)fcb_buff);
     int fcb_count=(int)(cur_dir.length/sizeof (fcb));
     for(int i=0;i<fcb_count;i++){
-        if(fcb_buff[i].free == 1){
+        if(fcb_buff[i].fcb_inode->free == 1){
             //目录文件
             //同理,年份占7位,月份占4位,日期占5位
             //小时占5位,分钟占6位,秒占5位
-            if(fcb_buff[i].attribute == 0){
+            if(fcb_buff[i].fcb_inode->attribute == 0){
                 printf("%s\t%dB\t<DIR>\t%d/%d/%d\t%02d:%02d:%02d\n",
-                       fcb_buff[i].filename, fcb_buff[i].length,
-                       (fcb_buff[i].date >> 9) + 2000,
-                       (fcb_buff[i].date >> 5) & 0x000f,
-                       (fcb_buff[i].date) & 0x001f,
-                       (fcb_buff[i].time >> 11),
-                       (fcb_buff[i].time >> 5) & 0x003f,
-                       (fcb_buff[i].time) & 0x001f * 2);
+                       fcb_buff[i].filename, fcb_buff[i].fcb_inode->length,
+                       (fcb_buff[i].fcb_inode->date >> 9) + 2000,
+                       (fcb_buff[i].fcb_inode->date >> 5) & 0x000f,
+                       (fcb_buff[i].fcb_inode->date) & 0x001f,
+                       (fcb_buff[i].fcb_inode->time >> 11),
+                       (fcb_buff[i].fcb_inode->time >> 5) & 0x003f,
+                       (fcb_buff[i].fcb_inode->time) & 0x001f * 2);
             }
             else{
-                unsigned int length = fcb_buff[i].length;
+                unsigned int length = fcb_buff[i].fcb_inode->length;
                 printf("%s.%s\t%dB\t<File>\t%d/%d/%d\t%02d:%02d:%02d\n",
                        fcb_buff[i].filename,
-                       fcb_buff[i].exname,
+                       fcb_buff[i].fcb_inode->exname,
                        length,
-                       (fcb_buff[i].date >> 9) + 2000,
-                       (fcb_buff[i].date >> 5) & 0x000f,
-                       (fcb_buff[i].date) & 0x001f,
-                       (fcb_buff[i].time >> 11),
-                       (fcb_buff[i].time >> 5) & 0x003f,
-                       (fcb_buff[i].time) & 0x001f * 2);
+                       (fcb_buff[i].fcb_inode->date >> 9) + 2000,
+                       (fcb_buff[i].fcb_inode->date >> 5) & 0x000f,
+                       (fcb_buff[i].fcb_inode->date) & 0x001f,
+                       (fcb_buff[i].fcb_inode->time >> 11),
+                       (fcb_buff[i].fcb_inode->time >> 5) & 0x003f,
+                       (fcb_buff[i].fcb_inode->time) & 0x001f * 2);
             }
         }
     }
@@ -725,13 +725,14 @@ int name_split(char* filedir,char* dir_and_filename,char* exname,char* filename)
     }
     return 1;
 }
-int go_to_dir(char* dir_and_filename,char* filename,fcb* fcb_buff){
+
+int go_to_dir(char* dir_and_filename,char* exname,fcb* fcb_buff){
     int fcb_count;
     int start_block;
 
     if(dir_and_filename[0]=='/') { //如果是绝对路径
         start_block=ROOT_BLOCK_INDEX;
-        fcb_count=((fcb*)getPtr_of_vDrive(((block0*)my_vdrive)->root_block))->length/sizeof (fcb);
+        fcb_count=((fcb*)getPtr_of_vDrive(((block0*)my_vdrive)->root_block))->fcb_inode->length/sizeof (fcb);
     }
     else{
         start_block=cur_dir.first_block;
@@ -740,31 +741,27 @@ int go_to_dir(char* dir_and_filename,char* filename,fcb* fcb_buff){
 
     char* dir= strtok(dir_and_filename,"/");
     int fcb_index=-1;
-    if(strcmp(dir,filename)==0){
-        memset(fcb_buff,0,MAX_TEXT_SIZE);
-        do_read(0, start_block, fcb_count*sizeof (fcb), (char*)fcb_buff);
-    }
-    while(strcmp(dir,filename)!=0){  //定位到文件目录
+
+    while(dir!=NULL){  //定位到文件目录
         memset(fcb_buff,0,MAX_TEXT_SIZE);
         do_read(0, start_block, fcb_count, (char*)fcb_buff);
 
         for(int i=0; i < fcb_count ; i++){ //在fcb列表中找到目录fcb
-            if(strcmp(fcb_buff[i].filename,dir)==0&&strcmp(fcb_buff[i].exname,"dir")==0&&fcb_buff[i].attribute==0){
+            if(strcmp(fcb_buff[i].filename,dir)==0&&strcmp(fcb_buff[i].fcb_inode->exname,exname)==0){
                 fcb_index=i;
                 break;
             }
         }
         if(fcb_index==-1){ //没找到目录文件的fcb
-            printf("no such dir!\n");
+            printf("file or directory not found, ");
             return -1;
         }
-        else{
-            fcb_count=fcb_buff[fcb_index].length;
-            start_block=fcb_buff[fcb_index].first_block;
+        if(dir= strtok(NULL,"/")!=NULL) {
+            fcb_count = fcb_buff[fcb_index].fcb_inode->length;
+            start_block = fcb_buff[fcb_index].fcb_inode->first_block;
         }
-        dir= strtok(NULL,"/");
     }
-    return fcb_count*sizeof (fcb);
+    return fcb_index;
 }
 int my_open(char* filedir)
 {
@@ -792,31 +789,6 @@ int my_open(char* filedir)
         printf("no such file, open fail!\n");
         return -1;
     }
-    for(int i=0;i<MAX_OPEN_FILE;i++){
-        if(open_file_list[i].topenfile==0){
-            continue;
-        }
-        if(open_file_list[i].attribute==1&&strcmp(open_file_list[i].dir,absolute_dir)==0){
-            printf("file has been opened, open fail!\n");
-            return -1;
-        }
-    }
-
-    if(dir_and_filename[0]=='/') { //如果是绝对路径
-        strncat(absolute_dir,dir_and_filename,strlen(dir_and_filename));
-    }
-    else{
-        if(strcmp(cur_dir.filename,"")==0){
-            strcat(absolute_dir,"/");
-            strncat(absolute_dir,filedir,strlen(filedir));
-        }
-        else{
-            strcpy(absolute_dir,cur_dir.dir);
-            strcat(absolute_dir,"/");
-            strncat(absolute_dir,filedir,strlen(filedir));
-        }
-
-    }
 
 
     fcb* fcb_buff=(fcb*) buff;
@@ -825,7 +797,8 @@ int my_open(char* filedir)
         printf("can not open file with extend name \".dir\", open fail!\n");
         return -1;
     }
-    int fcb_count=-1;
+    int fcb_index=-1;
+
     ret=go_to_dir(dir_and_filename, filename, fcb_buff)/sizeof (fcb);
     if(ret==-1){
         printf("open fail!\n");
@@ -833,29 +806,25 @@ int my_open(char* filedir)
     }
     else
     {
-        fcb_count=ret;
+        fcb_index=ret;
     }
-
-    //定位完了，此时从dir_buff中查找filename  dir_buff就是需要打开的文件的目录文件的所有内容
-    int fcb_index=-1;
-    for(int i=0; i < fcb_count;i++){
-        if(strcmp(fcb_buff[i].filename,filename)==0&& strcmp(fcb_buff[i].exname,exname)==0&&fcb_buff[i].attribute==1){
-            fcb_index=i;
-            break;
+    for(int i=0;i<MAX_OPEN_FILE;i++){
+        if(open_file_list[i].topenfile==0){
+            continue;
+        }
+        if(open_file_list[i].attribute==1&&strcmp(open_file_list[i].dir,fcb_buff[fcb_index].fcb_inode->dir)==0){
+            printf("file has been opened, open fail!\n");
+            return -1;
         }
     }
-    if(fcb_index == -1){
-        printf("file not found, open fail!\n");
-        return -1;
-    }
-
+    //定位完了，此时从dir_buff中查找filename  dir_buff就是需要打开的文件的目录文件的所有内容
     strcpy(open_file_list[new_fd].filename,fcb_buff[fcb_index].filename);
-    strcpy(open_file_list[new_fd].exname,fcb_buff[fcb_index].exname);
-    open_file_list[new_fd].time=fcb_buff[fcb_index].time;
-    open_file_list[new_fd].date=fcb_buff[fcb_index].date;
-    open_file_list[new_fd].first_block=fcb_buff[fcb_index].first_block;
-    open_file_list[new_fd].length=fcb_buff[fcb_index].length;
-    strcpy(open_file_list[new_fd].dir,absolute_dir);
+    strcpy(open_file_list[new_fd].exname,fcb_buff[fcb_index].fcb_inode->exname);
+    open_file_list[new_fd].time=fcb_buff[fcb_index].fcb_inode->time;
+    open_file_list[new_fd].date=fcb_buff[fcb_index].fcb_inode->date;
+    open_file_list[new_fd].first_block=fcb_buff[fcb_index].fcb_inode->first_block;
+    open_file_list[new_fd].length=fcb_buff[fcb_index].fcb_inode->length;
+    strcpy(open_file_list[new_fd].dir,fcb_buff[fcb_index].fcb_inode->dir);
     open_file_list[new_fd].attribute=1;
     open_file_list[new_fd].rw_ptr=0;
     open_file_list[new_fd].fcbstate=0;
@@ -941,30 +910,27 @@ int my_close(int fd)
 
     fcb* fcb_buff=(fcb*) buff;
 
-    ret=go_to_dir(dir_and_filename,filename,fcb_buff);
+    ret=go_to_dir(dir_and_filename,exname,fcb_buff);
 
     if(ret==-1){
         printf("close fail!\n");
     }
     else
     {
-        fcb_count=ret/sizeof (fcb);
+        fcb_index=ret;
     }
+    fcb_buff[fcb_index].fcb_inode->length=open_file_list[fd].length;
+    time_t rawtime = time(NULL);
+    struct tm* time = localtime(&rawtime);
+    fcb_buff[fcb_index].fcb_inode->date = (time->tm_year - 100) * 512 + (time->tm_mon + 1) * 32 + (time->tm_mday);
+    fcb_buff[fcb_index].fcb_inode->time = (time->tm_hour) * 2048 + (time->tm_min) * 32 + (time->tm_sec) / 2;
 
-    for(int i=0;i<fcb_count;i++){
-        if(strcmp(fcb_buff[i].filename,open_file_list[fd].filename)==0&& strcmp(fcb_buff[i].exname,open_file_list[fd].exname)==0){
-            fcb_index=i;
-            break;
-        }
-    }
-    fcb_buff[fcb_index].length=open_file_list[fd].length;
 
-    do_write(fcb_buff[0].first_block,fcb_index*sizeof (fcb),(char*)(fcb_buff+fcb_index),sizeof (fcb));
+    do_write(fcb_buff[0].fcb_inode->first_block,fcb_index*sizeof (fcb),(char*)(fcb_buff+fcb_index),sizeof (fcb));
 
     printf("closed %s\n",open_file_list[fd].dir);
     memset(&open_file_list[fd],0,sizeof (useropen));
     free(open_file_list[fd].file_buff);
-
 
 
     free(exname);
