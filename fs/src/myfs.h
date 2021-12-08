@@ -18,25 +18,25 @@ typedef struct FAT{ //2B
     u16_t index;
 }fat;
 typedef struct FCB{   //16B
-    u8_t filename[8]; // 8B
-    inode* fcb_inode; //8B
+    u8_t filename[12]; // 12B
+    int inode_index; //4B
 }fcb;
 
 
 typedef struct inode{
-    u8_t exname[3]; // 3B
+    u8_t exname[8]; // 3B
     u8_t dir[80];
     u16_t time; //2B
     u16_t date;// 2B
     u16_t first_block; //2B
     u32_t length;  //4B
     u8_t attribute;// 1B
-    u8_t free;  //标记整个是否为空 0空 1不空
+    u8_t free;  //标记整个inode是否为空 0空 1不空
 }inode;
 
 typedef struct USEROPEN{
     u8_t filename[8];
-    u8_t exname[3];
+    u8_t exname[8];
     u16_t time;
     u16_t date;
     u16_t first_block;
@@ -61,7 +61,7 @@ typedef struct BLOCK0{
 #define FILENAME "123.txt"
 #define BLOCK_SIZE 1024     //1MB
 #define vDRIVE_SIZE (DATA_AREA_SIZE+INODE_AREA_SIZE) //1000MB+80MB
-#define INODE_AREA_SIZE (sizeof(inode)*1000) //80MB左右
+#define INODE_AREA_SIZE (sizeof(inode)*1000) //100MB左右
 #define DATA_AREA_SIZE 1024000
 #define END_OF_FILE 65535
 #define FREE_BLOCK 0
@@ -89,9 +89,8 @@ int get_free_block();
 int get_free_fd();
 int my_open(char* filedir);
 int my_write(int fd);
-int name_split(char* filedir,char* dir_and_filename,char* exname,char* filename);
+int file_name_split(char* filedir, char* dir_and_filename, char* exname, char* filename);
 int check_name(char* name,int length);
-int go_to_dir(char* dir_and_filename,char* exname,fcb* fcb_buff);
 int my_rm(char* filedir); //只能删除数据文件
 int my_create(char* filedir);
 int my_close(int fd);
@@ -104,5 +103,6 @@ int my_cd(char* dirname);
 void error(char *command);
 void print_opended();
 void show_help();
+int get_free_inode();
 
 #endif //FS_MYFS_H

@@ -8,8 +8,8 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
-  "C:/user files/file_system/fs/main.c" "C:/user files/file_system/fs/cmake-build-debug-mingw/CMakeFiles/fs.dir/main.c.obj"
-  "C:/user files/file_system/fs/src/myfs.c" "C:/user files/file_system/fs/cmake-build-debug-mingw/CMakeFiles/fs.dir/src/myfs.c.obj"
+  "D:/embedded system/file_system/fs/main.c" "D:/embedded system/file_system/fs/cmake-build-debug-mingw/CMakeFiles/fs.dir/main.c.obj"
+  "D:/embedded system/file_system/fs/src/myfs.c" "D:/embedded system/file_system/fs/cmake-build-debug-mingw/CMakeFiles/fs.dir/src/myfs.c.obj"
   )
 set(CMAKE_C_COMPILER_ID "GNU")
 
