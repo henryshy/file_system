@@ -351,9 +351,6 @@ void my_ls()
     memset((char*)buff,0,MAX_TEXT_SIZE);
 }
 
-
-
-
 int my_cd(char* dirname)
 {
     if(strcmp(cur_dir.filename,"")==0){
@@ -385,7 +382,7 @@ int my_cd(char* dirname)
     cur_dir.attribute=inode_ptr[fcb_buff[fcb_index].inode_index].attribute;
 
     memset((char*)buff,0,MAX_TEXT_SIZE);
-    return -1;
+    return 1;
 
 }
 int my_mkdir(char* dirname)
@@ -472,6 +469,7 @@ int my_mkdir(char* dirname)
         new_fcb[1].inode_index=fcb_buff[0].inode_index;
 
         do_write(inode_ptr[inode_index].first_block,0,(char*)new_fcb,2*sizeof (fcb));
+        free(new_fcb);
     }
     else if(fcb_index==-2)//不是最后一层，没找到目录，报错退出
     {
@@ -527,7 +525,7 @@ int my_create(char* filedir){ //创建数据文件
             split_index--;
         }
         char* comp_name=(char*) calloc(1,80);
-        strcpy(comp_name,(char*)(filedir+split_index));
+        strcpy(comp_name,(char*)(filedir+split_index+1));
 
         int point_index= strlen(comp_name)-1;
         while(point_index > 0){
@@ -690,8 +688,9 @@ int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:目录
     inode *inode_ptr = INODE_PTR;
     int fcb_count = -2;
     int start_block;
-
-    if (filedir[0] == '/') { //如果输入的是绝对路径
+    char* go_to_filedir=(char*) calloc(1,80);
+    strcpy(go_to_filedir,filedir);
+    if (go_to_filedir[0] == '/') { //如果输入的是绝对路径
         //从根目录开始查找
         start_block = ROOT_BLOCK_INDEX;
         fcb_count = inode_ptr[((fcb *) getPtr_of_vDrive(((block0 *) my_vdrive)->root_block))->inode_index].length /sizeof(fcb);
@@ -704,14 +703,16 @@ int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:目录
 
     char directory[20][20];
     char *dir;
-    dir = strtok(filedir, "/");
+    dir = strtok(go_to_filedir, "/");
     if(dir==NULL){
+        free(go_to_filedir);
         return -2;
     }
     strcpy(directory[0], dir);
     int fcb_index = -2;
     if (directory[0] == NULL) {
         printf("unexpected error!\n");
+        free(go_to_filedir);
         memset((char *) buff, 0, MAX_TEXT_SIZE);
         return -2;
     }
@@ -725,6 +726,7 @@ int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:目录
             depth++;
             if (depth > 19) {
                 printf("directory length out of range\n");
+                free(go_to_filedir);
                 return -2;
             }
             strcpy(directory[depth], dir);
@@ -751,6 +753,7 @@ int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:目录
                 if (point_index == length || point_index == 0) {
                     free(dir_exname);
                     free(filename);
+                    free(go_to_filedir);
                     return -2;
                 }
                 filename[point_index-1]='\0';
@@ -758,6 +761,7 @@ int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:目录
                 if (strcmp(dir_exname, "dir") == 0) {
                     free(dir_exname);
                     free(filename);
+                    free(go_to_filedir);
                     return -2;
                 }
             }
@@ -778,11 +782,13 @@ int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:目录
             if (pos != depth) {  //不是最后一层，没找到目录，返回-2
                 free(dir_exname);
                 free(filename);
+                free(go_to_filedir);
                 return fcb_index;
             } else { //是最后一层,返回-1
                 fcb_index = -1;
                 free(dir_exname);
                 free(filename);
+                free(go_to_filedir);
                 return fcb_index;
             }
         } else { //找到目录fcb
@@ -794,6 +800,7 @@ int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:目录
             } else {//是最后一层，而且找到了，返回位置
                 free(dir_exname);
                 free(filename);
+                free(go_to_filedir);
                 return fcb_index;
             }
         }
@@ -801,6 +808,7 @@ int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:目录
     }
     free(dir_exname);
     free(filename);
+    free(go_to_filedir);
     return fcb_index;
 }
 
@@ -1022,9 +1030,9 @@ int get_free_block()
     fat* fat1=FAT1_PTR;
     int i;
     int block_index=-1;
-    for(i=7;i<=1000;i++){
+    for(i=6;i<1000;i++){
         if(fat1[i].index==FREE_BLOCK){
-            block_index=i;
+            block_index=i+1;
             break;
         }
     }
