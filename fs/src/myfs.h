@@ -89,8 +89,6 @@ int get_free_block();
 int get_free_fd();
 int my_open(char* filedir);
 int my_write(int fd);
-int file_name_split(char* filedir, char* dir_and_filename, char* exname, char* filename);
-int check_name(char* name,int length);
 int my_rm(char* filedir); //只能删除数据文件
 int my_create(char* filedir);
 int my_close(int fd);
@@ -104,5 +102,5 @@ void error(char *command);
 void print_opended();
 void show_help();
 int get_free_inode();
-
+int go_to_file(char* filedir,int attribute);
 #endif //FS_MYFS_H
