@@ -96,7 +96,7 @@ void my_ls();
 void exitsys();
 int my_read(int fd);
 int my_mkdir(char* dirname);
-void my_rmdir(char *dirname);
+int my_rmdir(char *dirname);
 int my_cd(char* dirname);
 void error(char *command);
 void print_opended();

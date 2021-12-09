@@ -9,7 +9,7 @@ void parse_command() {
     char cmd[15][10] = {"mkdir", "rmdir", "ls", "cd", "create", "rm", "open", "close", "write", "read", "exit", "help","printopen"};
     char command[50];
     while (1) {
-        printf("%s > ", cur_dir.dir);
+        printf("current dir: %s > ", cur_dir.dir);
         fgets(command, 50, stdin);
 
         if (strcmp(command, "") == 0) {
@@ -244,7 +244,7 @@ void exitsys()
     free(buff);
     free(my_vdrive);
 }
-void  my_format()
+void my_format()
 {
 //初始化引导块
     block0* boot_block=(block0*)my_vdrive;
@@ -353,6 +353,32 @@ void my_ls()
 
 int my_cd(char* dirname)
 {
+    if(dirname[strlen(dirname)-1]=='/'){
+        fcb* fcb_buff=(fcb*) buff;
+        inode* inode_ptr=INODE_PTR;
+
+        if(strlen(dirname)-1==0){
+            do_read(0,ROOT_BLOCK_INDEX,inode_ptr[((fcb *) getPtr_of_vDrive(((block0 *) my_vdrive)->root_block))->inode_index].length,(char*)fcb_buff);
+            strcpy(cur_dir.filename,fcb_buff[0].filename);
+            strcpy(cur_dir.exname,inode_ptr[fcb_buff[0].inode_index].exname);
+            strcpy(cur_dir.dir,inode_ptr[fcb_buff[0].inode_index].dir);
+            cur_dir.rw_ptr=0;
+            cur_dir.fcbstate=1;
+            cur_dir.topenfile=1;
+            cur_dir.time=inode_ptr[fcb_buff[0].inode_index].time;
+            cur_dir.date=inode_ptr[fcb_buff[0].inode_index].date;
+            cur_dir.first_block=inode_ptr[fcb_buff[0].inode_index].first_block;
+            cur_dir.length=inode_ptr[fcb_buff[0].inode_index].length;
+            cur_dir.attribute=inode_ptr[fcb_buff[0].inode_index].attribute;
+
+            memset((char*)buff,0,MAX_TEXT_SIZE);
+            return 1;
+        }else
+        {
+            printf("format error, cd fail!\n");
+            return -1;
+        }
+    }
     if(strcmp(cur_dir.filename,"")==0){
         if(strcmp(dirname,"..")==0|| strcmp(dirname,".")==0||strcmp(dirname,"/")==0){
             return 1;
@@ -361,7 +387,6 @@ int my_cd(char* dirname)
     fcb* fcb_buff=(fcb*) buff;
     inode* inode_ptr=INODE_PTR;
     int fcb_index= go_to_file(dirname,0,fcb_buff);
-
 
     if(fcb_index==-1||fcb_index==-2){ //没找到目录文件的fcb
         printf("no such file or directory, cd fail!\n");
@@ -387,7 +412,10 @@ int my_cd(char* dirname)
 }
 int my_mkdir(char* dirname)
 {
-
+    if(dirname[strlen(dirname)-1]=='/'){
+        printf("format error, mkdir fail!\n");
+        return -1;
+    }
     int free_block=get_free_block();
     if(free_block==-1){
         printf("disk is full, mkdir fail!\n");
@@ -416,7 +444,6 @@ int my_mkdir(char* dirname)
             }
             split_index--;
         }
-
         char* dir_filename=dirname+split_index;
 
         strcpy(absolute_dir,inode_ptr[fcb_buff[0].inode_index].dir);
@@ -485,14 +512,60 @@ int my_mkdir(char* dirname)
     memset((char*)buff,0,MAX_TEXT_SIZE);
     return 1;
 }
-void my_rmdir(char *dirname)
+int my_rmdir(char *dirname)
 {
+    if(dirname[strlen(dirname)-1]=='/'){
+        printf("format error, mkdir fail!\n");
+        return -1;
+    }
+    inode* inode_ptr=INODE_PTR;
+    fcb* fcb_buff=(fcb*)buff;
 
+    int fcb_index= go_to_file(dirname,0,fcb_buff);
+    if(fcb_index==-2||fcb_index==-1){
+        printf("no such file or directory, open fail!\n");
+        memset((char*)buff,0,MAX_TEXT_SIZE);
+        return -1;
+    }
+
+    if(strcmp(cur_dir.dir,inode_ptr[fcb_buff[fcb_index].inode_index].dir)==0){
+        printf("can not remove current directory, rmdir fail!\n");
+        memset((char*)buff,0,MAX_TEXT_SIZE);
+        return -1;
+    }
+    if(inode_ptr[fcb_buff[fcb_index].inode_index].length>2*sizeof (fcb)){
+        printf("only can remove empty directory, rmdir fail!\n");
+        memset((char*)buff,0,MAX_TEXT_SIZE);
+        return -1;
+    }
+//从fcb_buff中删除那个fcb，整合整个fcb_buff
+    for(int i=fcb_index; i < inode_ptr[fcb_buff[0].inode_index].length; i++){
+        memcpy((fcb*)(fcb_buff+i),(fcb*)(fcb_buff+i+1),sizeof (fcb));
+    }
+    time_t rawtime = time(NULL);
+    struct tm* time = localtime(&rawtime);
+    inode_ptr[fcb_buff[fcb_index].inode_index].date = (time->tm_year - 100) * 512 + (time->tm_mon + 1) * 32 + (time->tm_mday);
+    inode_ptr[fcb_buff[fcb_index].inode_index].time = (time->tm_hour) * 2048 + (time->tm_min) * 32 + (time->tm_sec) / 2;
+    inode_ptr[fcb_buff[fcb_index].inode_index].length-=sizeof (fcb);
+    inode_ptr[fcb_buff[0].inode_index].length-=sizeof(fcb);
+//判断删除的是否是当前打开目录的下的文件
+    if(strcmp(cur_dir.dir,inode_ptr[fcb_buff[0].inode_index].dir)==0){
+        cur_dir.length-=sizeof (fcb);
+    }
+//将fcb_buff写回磁盘，写完清空缓存
+    do_write(inode_ptr[fcb_buff[0].inode_index].first_block,0,(char*)fcb_buff,(inode_ptr[fcb_buff[0].inode_index].length-1)*sizeof (fcb));
+
+    memset((char*)buff,0,MAX_TEXT_SIZE);
+    return 1;
 }
 
 
 int my_create(char* filedir){ //创建数据文件
 //获取一个新盘块，没有则退出
+    if(filedir[strlen(filedir)-1]=='/'){
+        printf("format error, mkdir fail!\n");
+        return -1;
+    }
     int free_block=get_free_block();
     if(free_block==-1){
         printf("disk is full, create fail!\n");
@@ -518,7 +591,7 @@ int my_create(char* filedir){ //创建数据文件
 
         int length= strlen(filedir);
         int split_index=length-1;
-        while(split_index > 0){
+        while(split_index >= 0){
             if(filedir[split_index] == '/'){
                 break;
             }
@@ -528,7 +601,7 @@ int my_create(char* filedir){ //创建数据文件
         strcpy(comp_name,(char*)(filedir+split_index+1));
 
         int point_index= strlen(comp_name)-1;
-        while(point_index > 0){
+        while(point_index >= 0){
             if(comp_name[point_index ] == '.'){
                 break;
             }
@@ -570,13 +643,9 @@ int my_create(char* filedir){ //创建数据文件
 
         do_write(inode_ptr[fcb_buff[0].inode_index].first_block, 0, (char*)fcb_buff, inode_ptr[fcb_buff[0].inode_index].length);
 
-        if(filedir[0]=='/'){
-            if(cur_dir.first_block==ROOT_BLOCK_INDEX){
-                cur_dir.length=inode_ptr[fcb_buff[0].inode_index].length;
-            }
-        }
-        else{
-            cur_dir.length=inode_ptr[fcb_buff[0].inode_index].length;
+
+        if(strcmp(inode_ptr[fcb_buff[0].inode_index].dir,cur_dir.dir)==0){
+            cur_dir.length+=sizeof (fcb);
         }
     }
     else if(fcb_index==-2)//不是最后一层，没找到目录，报错退出
@@ -604,6 +673,7 @@ int my_rm(char* filedir){//只能删除数据文件
         memset((char*)buff,0,MAX_TEXT_SIZE);
         return -1;
     }
+
 //在已打开文件列表里面查找这个文件
     for(int i=0;i<MAX_OPEN_FILE;i++){
         if(open_file_list[i].topenfile==0){
@@ -917,13 +987,13 @@ int my_write(int fd)
 
     printf("input text:\n");
 
-//    int ch=EOF;
-//    ch=getchar();
-//    while (ch!=EOF){
-//        write_txt[write_length++]=(char)ch;
-//        ch=getchar();
-//    }
-    fgets(open_file_list[fd].file_buff,MAX_FILE_BUFF_SIZE,stdin);
+    int ch=EOF;
+    ch=getchar();
+    while (ch!=EOF){
+        open_file_list[fd].file_buff[write_length++]=(char)ch;
+        ch=getchar();
+    }
+   // fgets(open_file_list[fd].file_buff,MAX_FILE_BUFF_SIZE,stdin);
 
     write_length= strlen(open_file_list[fd].file_buff);
     (open_file_list[fd].file_buff)[write_length-1]='\0';
