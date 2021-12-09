@@ -322,15 +322,17 @@ void my_ls()
             //同理,年份占7位,月份占4位,日期占5位
             //小时占5位,分钟占6位,秒占5位
             if(inode_ptr[fcb_buff[i].inode_index].attribute == 0){
-                printf("%s\t%dB\t<DIR>\t%d/%d/%d\t%02d:%02d:%02d\n",
-                       fcb_buff[i].filename,
-                       (inode_ptr[fcb_buff[i].inode_index].length),
-                       (inode_ptr[fcb_buff[i].inode_index].date >> 9) + 2000,
-                       (inode_ptr[fcb_buff[i].inode_index].date >> 5) & 0x000f,
-                       (inode_ptr[fcb_buff[i].inode_index].date) & 0x001f,
-                       (inode_ptr[fcb_buff[i].inode_index].time >> 11),
-                       (inode_ptr[fcb_buff[i].inode_index].time >> 5) & 0x003f,
-                       (inode_ptr[fcb_buff[i].inode_index].time) & 0x001f * 2);
+                if(strcmp(fcb_buff[i].filename,"..")!=0&&strcmp(fcb_buff[i].filename,".")!=0) {
+                    printf("%s\t%dB\t<DIR>\t%d/%d/%d\t%02d:%02d:%02d\n",
+                           fcb_buff[i].filename,
+                           (inode_ptr[fcb_buff[i].inode_index].length),
+                           (inode_ptr[fcb_buff[i].inode_index].date >> 9) + 2000,
+                           (inode_ptr[fcb_buff[i].inode_index].date >> 5) & 0x000f,
+                           (inode_ptr[fcb_buff[i].inode_index].date) & 0x001f,
+                           (inode_ptr[fcb_buff[i].inode_index].time >> 11),
+                           (inode_ptr[fcb_buff[i].inode_index].time >> 5) & 0x003f,
+                           (inode_ptr[fcb_buff[i].inode_index].time) & 0x001f * 2);
+                }
             }
             else{
                 printf("%s.%s\t%dB\t<File>\t%d/%d/%d\t%02d:%02d:%02d\n",
@@ -359,9 +361,10 @@ int my_cd(char* dirname)
             return 1;
         }
     }
-    int fcb_index= go_to_file(dirname,0);
     fcb* fcb_buff=(fcb*) buff;
     inode* inode_ptr=INODE_PTR;
+    int fcb_index= go_to_file(dirname,0,fcb_buff);
+
 
     if(fcb_index==-1||fcb_index==-2){ //没找到目录文件的fcb
         printf("no such file or directory, cd fail!\n");
@@ -381,6 +384,8 @@ int my_cd(char* dirname)
     cur_dir.length=inode_ptr[fcb_buff[fcb_index].inode_index].length;
     cur_dir.attribute=inode_ptr[fcb_buff[fcb_index].inode_index].attribute;
 
+    memset((char*)buff,0,MAX_TEXT_SIZE);
+    return -1;
 
 }
 int my_mkdir(char* dirname)
@@ -400,7 +405,7 @@ int my_mkdir(char* dirname)
     inode* inode_ptr=INODE_PTR;
     fcb* fcb_buff=(fcb*)buff;
 
-    int fcb_index= go_to_file(dirname,0);
+    int fcb_index= go_to_file(dirname,0,fcb_buff);
 
 
     if(fcb_index==-1)//是最后一层找不到,说明这个文件还没有被创建,则把他追加到fcb列表末尾
@@ -415,13 +420,13 @@ int my_mkdir(char* dirname)
             split_index--;
         }
 
-        char* dir_filename=dirname+split_index+1;
+        char* dir_filename=dirname+split_index;
 
         strcpy(absolute_dir,inode_ptr[fcb_buff[0].inode_index].dir);
         strcat(absolute_dir,"/");
         strcat(absolute_dir,dir_filename);
 
-        fcb_index=inode_ptr[fcb_buff[0].inode_index].length;
+        fcb_index=inode_ptr[fcb_buff[0].inode_index].length/sizeof(fcb);
 
         fat* fat1=FAT1_PTR;
         fat* fat2=FAT2_PTR;
@@ -440,13 +445,16 @@ int my_mkdir(char* dirname)
         inode_ptr[inode_index].time = (time->tm_hour) * 2048 + (time->tm_min) * 32 + (time->tm_sec) / 2;
         inode_ptr[inode_index].first_block = free_block;
         inode_ptr[inode_index].free = 1;
-        inode_ptr[inode_index].length = 0;
-        inode_ptr[inode_index].attribute = 1;
+        inode_ptr[inode_index].length = 2*sizeof (fcb);
+        inode_ptr[inode_index].attribute = 0;
 //修改父目录的inode
         inode_ptr[fcb_buff[0].inode_index].length+=sizeof (fcb);
 
         do_write(inode_ptr[fcb_buff[0].inode_index].first_block, 0, (char*)fcb_buff, inode_ptr[fcb_buff[0].inode_index].length);
 
+
+
+//判断当前打开目录是否需要修改
         if(dirname[0]=='/'){
             if(cur_dir.first_block==ROOT_BLOCK_INDEX){
                 cur_dir.length=inode_ptr[fcb_buff[0].inode_index].length;
@@ -455,6 +463,15 @@ int my_mkdir(char* dirname)
         else{
             cur_dir.length=inode_ptr[fcb_buff[0].inode_index].length;
         }
+//在新的目录文件中创建.和..两个特殊目录项
+        fcb* new_fcb=(fcb*) calloc(2,sizeof (fcb));
+        strcpy(new_fcb[0].filename,".");
+        new_fcb[0].inode_index=inode_index;
+
+        strcpy(new_fcb[1].filename,"..");
+        new_fcb[1].inode_index=fcb_buff[0].inode_index;
+
+        do_write(inode_ptr[inode_index].first_block,0,(char*)new_fcb,2*sizeof (fcb));
     }
     else if(fcb_index==-2)//不是最后一层，没找到目录，报错退出
     {
@@ -467,7 +484,8 @@ int my_mkdir(char* dirname)
         memset((char*)buff,0,MAX_TEXT_SIZE);
         return -1;
     }
-
+    memset((char*)buff,0,MAX_TEXT_SIZE);
+    return 1;
 }
 void my_rmdir(char *dirname)
 {
@@ -493,30 +511,41 @@ int my_create(char* filedir){ //创建数据文件
 
     inode* inode_ptr=INODE_PTR;
     fcb* fcb_buff=(fcb*)buff;
-    int fcb_index= go_to_file(filedir,1);
+    int fcb_index= go_to_file(filedir,1,fcb_buff);
 
 
     if(fcb_index==-1)//是最后一层找不到,说明这个文件还没有被创建,则把他追加到fcb列表末尾
     {
         char* absolute_dir=(char*)  calloc(1,80);
+
         int length= strlen(filedir);
-        int point_index=length;
-        while(point_index>0){
-            if(filedir[point_index-1]=='.'){
+        int split_index=length-1;
+        while(split_index > 0){
+            if(filedir[split_index] == '/'){
+                break;
+            }
+            split_index--;
+        }
+        char* comp_name=(char*) calloc(1,80);
+        strcpy(comp_name,(char*)(filedir+split_index));
+
+        int point_index= strlen(comp_name)-1;
+        while(point_index > 0){
+            if(comp_name[point_index ] == '.'){
                 break;
             }
             point_index--;
         }
-        filedir[point_index]='\0';
-        char* filename=filedir;
-        char* exname=(char*)(filedir+point_index+1);
+        comp_name[point_index]='\0';
+        char* filename=comp_name;
+        char* exname=(char*)(comp_name+point_index+1);
 
         strcpy(absolute_dir,inode_ptr[fcb_buff[0].inode_index].dir);
         strcat(absolute_dir,"/");
         strcat(absolute_dir,filename);
         strcat(absolute_dir,".");
         strcat(absolute_dir,exname);
-        fcb_index=inode_ptr[fcb_buff[0].inode_index].length;
+        fcb_index=inode_ptr[fcb_buff[0].inode_index].length/sizeof(fcb);
 
         fat* fat1=FAT1_PTR;
         fat* fat2=FAT2_PTR;
@@ -537,7 +566,7 @@ int my_create(char* filedir){ //创建数据文件
         inode_ptr[inode_index].free = 1;
         inode_ptr[inode_index].length = 0;
         inode_ptr[inode_index].attribute = 1;
-//修改父目录的inode
+//修改目录的inode
         inode_ptr[fcb_buff[0].inode_index].length+=sizeof (fcb);
 
 
@@ -564,13 +593,14 @@ int my_create(char* filedir){ //创建数据文件
         return -1;
     }
     memset((char*)buff,0,MAX_TEXT_SIZE);
+    return 1;
 }
 int my_rm(char* filedir){//只能删除数据文件
 
     inode* inode_ptr=INODE_PTR;
     fcb* fcb_buff=(fcb*)buff;
 
-    int fcb_index= go_to_file(filedir,1);
+    int fcb_index= go_to_file(filedir,1,fcb_buff);
     if(fcb_index==-2||fcb_index==-1){
         printf("no such file or directory, open fail!\n");
         memset((char*)buff,0,MAX_TEXT_SIZE);
@@ -583,7 +613,7 @@ int my_rm(char* filedir){//只能删除数据文件
         }
         if(open_file_list[i].attribute==1&&strcmp(open_file_list[i].dir,inode_ptr[fcb_buff[fcb_index].inode_index].dir)==0){
             printf("can not rm a opened file, close it before rm!\n");
-            printf("close fail!\n");
+            printf("rm fail!\n");
             memset((char*)buff,0,MAX_TEXT_SIZE);
             return -1;
         }
@@ -620,7 +650,7 @@ int my_open(char* filedir)
     }
     inode* inode_ptr=INODE_PTR;
     fcb* fcb_buff=(fcb*)buff;
-    int fcb_index= go_to_file(filedir,1);
+    int fcb_index= go_to_file(filedir,1,fcb_buff);
     if(fcb_index==-2||fcb_index==-1){
         printf("no such file or directory, open fail!\n");
         memset((char*)buff,0,MAX_TEXT_SIZE);
@@ -655,125 +685,122 @@ int my_open(char* filedir)
     memset((char*)buff,0,MAX_TEXT_SIZE);
 }
 
-int go_to_file(char* filedir,int attribute){  //attribute  0:目录 1:数据文件
-    fcb* fcb_buff=(fcb*) buff;
-    inode* inode_ptr=INODE_PTR;
-    int fcb_count=-2;
+int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:目录 1:数据文件
+
+    inode *inode_ptr = INODE_PTR;
+    int fcb_count = -2;
     int start_block;
 
-    if(filedir[0]=='/') { //如果输入的是绝对路径
+    if (filedir[0] == '/') { //如果输入的是绝对路径
         //从根目录开始查找
-        start_block=ROOT_BLOCK_INDEX;
-        fcb_count=inode_ptr[((fcb*)getPtr_of_vDrive(((block0*)my_vdrive)->root_block))->inode_index].length/sizeof (fcb);
-    }
-    else{
+        start_block = ROOT_BLOCK_INDEX;
+        fcb_count = inode_ptr[((fcb *) getPtr_of_vDrive(((block0 *) my_vdrive)->root_block))->inode_index].length /sizeof(fcb);
+    } else {
         //从当前目录开始找
-        start_block=cur_dir.first_block;
-        fcb_count=cur_dir.length/sizeof (fcb);
+        start_block = cur_dir.first_block;
+        fcb_count = cur_dir.length / sizeof(fcb);
     }
 
 
     char directory[20][20];
-    char* dir;
-    dir= strtok(filedir,"/");
-    strcpy(directory[0],dir);
-    int fcb_index=-1;
-    if(directory[0]==NULL){
+    char *dir;
+    dir = strtok(filedir, "/");
+    if(dir==NULL){
+        return -2;
+    }
+    strcpy(directory[0], dir);
+    int fcb_index = -2;
+    if (directory[0] == NULL) {
         printf("unexpected error!\n");
-        memset((char*)buff,0,MAX_TEXT_SIZE);
+        memset((char *) buff, 0, MAX_TEXT_SIZE);
         return -2;
     }
 //开始一层一层读
-    int depth=0;
-    while(1){
-        dir= strtok(NULL,"/");
-        if(dir==NULL){
+    int depth = 0;
+    while (1) {
+        dir = strtok(NULL, "/");
+        if (dir == NULL) {
             break;
-        }
-        else
-        {
+        } else {
             depth++;
-            if(depth>19){
+            if (depth > 19) {
                 printf("directory length out of range\n");
-                memset((char*)buff,0,MAX_TEXT_SIZE);
                 return -2;
             }
-            strcpy(directory[depth],dir);
+            strcpy(directory[depth], dir);
         }
     }
-    int pos=0;
-    char* dir_exname=(char*) malloc(8);
-    strcpy(dir_exname,"dir");
-    while(pos<=depth){
-        if(pos==depth){
-            if(attribute==0){ //最后一个是目录
+    int pos = 0;
+    char *dir_exname = (char *) malloc(8);
+    char* filename=(char*) malloc(8);
+    strcpy(dir_exname, "dir");
+    while (pos <= depth) {
+        strcpy(filename,directory[pos]);
+        if (pos == depth) {
+            if (attribute == 0) { //最后一个是目录
                 //do nothing
-            }
-            else if(attribute==1){
-                int length= strlen(directory[pos]);
-                int point_index=length;
-                while(point_index>0){
-                    if(directory[pos][point_index-1]=='.'){
+            } else if (attribute == 1) {
+                int length = strlen(directory[pos]);
+                int point_index = length;
+                while (point_index > 0) {
+                    if (directory[pos][point_index - 1] == '.') {
                         break;
                     }
                     point_index--;
                 }
-                if(point_index== length||point_index==0){
+                if (point_index == length || point_index == 0) {
                     free(dir_exname);
-                    memset((char*)buff,0,MAX_TEXT_SIZE);
+                    free(filename);
                     return -2;
                 }
-
-                strcpy(dir_exname,(char*)(directory[pos]+point_index+1));
-                if(strcmp(dir_exname,"dir")==0) {
-                    printf("extend name format error!\n");
+                filename[point_index-1]='\0';
+                strcpy(dir_exname, (char *) (directory[pos] + point_index));
+                if (strcmp(dir_exname, "dir") == 0) {
                     free(dir_exname);
-                    memset((char*)buff,0,MAX_TEXT_SIZE);
+                    free(filename);
                     return -2;
                 }
             }
         }
-    }
-    memset((char*)fcb_buff,0,MAX_TEXT_SIZE);
-    do_read(0, start_block, fcb_count*sizeof (fcb), (char*)fcb_buff);
 
-    for(int i=0; i < fcb_count ; i++){ //在fcb列表中找到目录fcb
-        if(strcmp(fcb_buff[i].filename,directory[pos])==0&&strcmp(inode_ptr[fcb_buff[i].inode_index].exname,dir_exname)==0){
-            fcb_index=i;
-            break;
-        }
-    }
+        memset((char *) fcb_buff, 0, MAX_TEXT_SIZE);
+        do_read(0, start_block, fcb_count * sizeof(fcb), (char *) fcb_buff);
 
-    if(fcb_index==-2){ //没找到目录文件的fcb
-        //判断查找的是不是路径中最后一层
-        if(pos!=depth){  //不是最后一层，没找到目录，返回-2
-            free(dir_exname);
-            memset((char*)buff,0,MAX_TEXT_SIZE);
-            return fcb_index;
+        for (int i = 0; i < fcb_count; i++) { //在fcb列表中找到目录fcb
+            if (strcmp(fcb_buff[i].filename, filename) == 0 &&strcmp(inode_ptr[fcb_buff[i].inode_index].exname, dir_exname) == 0) {
+                fcb_index = i;
+                break;
+            }
         }
-        else{ //是最后一层,返回-1
-            fcb_index=-1;
-            free(dir_exname);
-            memset((char*)buff,0,MAX_TEXT_SIZE);
-            return fcb_index;
+
+        if (fcb_index == -2) { //没找到目录文件的fcb
+            //判断查找的是不是路径中最后一层
+            if (pos != depth) {  //不是最后一层，没找到目录，返回-2
+                free(dir_exname);
+                free(filename);
+                return fcb_index;
+            } else { //是最后一层,返回-1
+                fcb_index = -1;
+                free(dir_exname);
+                free(filename);
+                return fcb_index;
+            }
+        } else { //找到目录fcb
+            //判断是不是最后一层
+            if (pos != depth) { //不是最后一层则再往下一层走
+                fcb_count = inode_ptr[fcb_buff[fcb_index].inode_index].length / sizeof(fcb);
+                start_block = inode_ptr[fcb_buff[fcb_index].inode_index].first_block;
+                fcb_index = -2;
+            } else {//是最后一层，而且找到了，返回位置
+                free(dir_exname);
+                free(filename);
+                return fcb_index;
+            }
         }
+        pos++;
     }
-    else{ //找到目录fcb
-        //判断是不是最后一层
-        if(pos!=depth) { //不是最后一层则再往下一层走
-            fcb_count = inode_ptr[fcb_buff[fcb_index].inode_index].length/sizeof(fcb);
-            start_block = inode_ptr[fcb_buff[fcb_index].inode_index].first_block;
-            fcb_index=-2;
-        }
-        else{//是最后一层，而且找到了，返回位置
-            free(dir_exname);
-            memset((char*)buff,0,MAX_TEXT_SIZE);
-            return fcb_index;
-        }
-    }
-    pos++;
     free(dir_exname);
-    memset((char*)buff,0,MAX_TEXT_SIZE);
+    free(filename);
     return fcb_index;
 }
 
@@ -838,7 +865,7 @@ int my_close(int fd)
 //调用go_to_file找到文件父目录的fcb列表以及文件fcb的位置
     fcb* fcb_buff=(fcb*) buff;
     inode* inode_ptr=INODE_PTR;
-    int fcb_index= go_to_file(open_file_list[fd].dir,1);
+    int fcb_index= go_to_file(open_file_list[fd].dir,1,fcb_buff);
 
 
 //更新文件的fcb

@@ -102,5 +102,5 @@ void error(char *command);
 void print_opended();
 void show_help();
 int get_free_inode();
-int go_to_file(char* filedir,int attribute);
+int go_to_file(char* filedir,int attribute,fcb *fcb_buff) ;  //attribute  0:目录 1:数据文件
 #endif //FS_MYFS_H
