@@ -161,12 +161,12 @@ void parse_command() {
     }
 }
 void print_opended(){
-    printf("filefd\tfilename\texname\tsize\n");
+    printf("filefd\tdirectory\tsize\n");
     for(int i=0;i<MAX_OPEN_FILE;i++){
         if(open_file_list[i].topenfile==0){
             continue;
         }
-        printf("%d\t%s\t%s\t%dB\n",i,open_file_list[i].filename,open_file_list[i].exname,open_file_list[i].length);
+        printf("%d\t%s\t%dB\n",i,open_file_list[i].dir,open_file_list[i].length);
     }
 }
 void show_help()
@@ -973,8 +973,8 @@ int my_write(int fd)
         printf("file not opened, write fail!\n");
         return -1;
     }
-    printf("waiting command for write method:\n1:½Ø¶ÏÐ´\n2:¸²¸ÇÐ´\n3:×·¼ÓÐ´\n");
-    char method[10]={'\0'};
+    printf("waiting command for write method:\n1:truncate\n2:cover\n3:append\n");
+
     int write_method=0;
     scanf("%d",&write_method);
     getchar();
@@ -989,7 +989,7 @@ int my_write(int fd)
 
     int ch=EOF;
     ch=getchar();
-    while (ch!=EOF){
+    while (ch!='#'){
         open_file_list[fd].file_buff[write_length++]=(char)ch;
         ch=getchar();
     }
