@@ -160,7 +160,7 @@ void parse_command() {
         }
     }
 }
-void print_opended(){
+void print_opended() {
     printf("filefd\tdirectory\tsize\n");
     for(int i=0;i<MAX_OPEN_FILE;i++){
         if(open_file_list[i].topenfile==0){
@@ -186,6 +186,8 @@ void error(char *command){
     printf("%s : argument error\n", command);
     printf("use command help for guidance\n");
 }
+
+
 void startsys()
 {
     my_vdrive=(u8_t*) calloc(1,vDRIVE_SIZE); //内存空间
@@ -882,14 +884,6 @@ int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:目录
     return fcb_index;
 }
 
-int get_free_fd(){
-    for(int i=0;i<MAX_OPEN_FILE;i++){
-        if(open_file_list[i].topenfile==0){
-            return i;
-        }
-    }
-    return -1;
-}
 int my_close(int fd)
 {
 //判断fd的范围是否合法
@@ -1056,7 +1050,7 @@ int do_read(int offset,int start_block, int tot_len, char* read_buff){//传入的of
     char* block_ptr;
 
     while(tot_len > 0){
-
+        block_ptr=(char*)getPtr_of_vDrive(cur_block);
         if(fat1[cur_block-1].index != END_OF_FILE){
             cur_block=fat1[cur_block-1].index;
             copy_len=BLOCK_SIZE-offset;
@@ -1065,7 +1059,6 @@ int do_read(int offset,int start_block, int tot_len, char* read_buff){//传入的of
         {
             copy_len=tot_len;
         }
-        block_ptr=(char*)getPtr_of_vDrive(cur_block);
         memcpy((char*)(read_buff + read_ptr), (char*)(block_ptr + offset), copy_len);
 
         read_ptr+=copy_len;
@@ -1095,6 +1088,9 @@ int my_read(int fd)
     memset((char*)buff,0,MAX_TEXT_SIZE);
     return 1;
 }
+
+
+
 int get_free_block()
 {
     fat* fat1=FAT1_PTR;
@@ -1124,4 +1120,12 @@ int get_free_inode(){
         }
     }
     return inode_index;
+}
+int get_free_fd(){
+    for(int i=0;i<MAX_OPEN_FILE;i++){
+        if(open_file_list[i].topenfile==0){
+            return i;
+        }
+    }
+    return -1;
 }
