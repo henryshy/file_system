@@ -447,7 +447,12 @@ int my_mkdir(char* dirname)
             split_index--;
         }
         char* dir_filename=dirname+split_index;
-
+        if(strlen(dir_filename)>MAX_FILENAME_LENGTH){
+            printf("name length out of range, create fail!\n");
+            free(absolute_dir);
+            memset((char*)buff,0,MAX_TEXT_SIZE);
+            return -1;
+        }
         strcpy(absolute_dir,inode_ptr[fcb_buff[0].inode_index].dir);
         strcat(absolute_dir,"/");
         strcat(absolute_dir,dir_filename);
@@ -499,6 +504,7 @@ int my_mkdir(char* dirname)
 
         do_write(inode_ptr[inode_index].first_block,0,(char*)new_fcb,2*sizeof (fcb));
         free(new_fcb);
+        free(absolute_dir);
     }
     else if(fcb_index==-2)//不是最后一层，没找到目录，报错退出
     {
@@ -564,6 +570,7 @@ int my_rmdir(char *dirname)
 
 int my_create(char* filedir){ //创建数据文件
 //获取一个新盘块，没有则退出
+
     if(filedir[strlen(filedir)-1]=='/'){
         printf("format error, mkdir fail!\n");
         return -1;
@@ -612,6 +619,12 @@ int my_create(char* filedir){ //创建数据文件
         comp_name[point_index]='\0';
         char* filename=comp_name;
         char* exname=(char*)(comp_name+point_index+1);
+        if(strlen(filename)>MAX_FILENAME_LENGTH|| strlen(exname)>MAX_EXNAME_LENGTH){
+            printf("name length out of range, create fail!\n");
+            free(absolute_dir);
+            memset((char*)buff,0,MAX_TEXT_SIZE);
+            return -1;
+        }
 
         strcpy(absolute_dir,inode_ptr[fcb_buff[0].inode_index].dir);
         strcat(absolute_dir,"/");
@@ -649,6 +662,7 @@ int my_create(char* filedir){ //创建数据文件
         if(strcmp(inode_ptr[fcb_buff[0].inode_index].dir,cur_dir.dir)==0){
             cur_dir.length+=sizeof (fcb);
         }
+        free(absolute_dir);
     }
     else if(fcb_index==-2)//不是最后一层，没找到目录，报错退出
     {
