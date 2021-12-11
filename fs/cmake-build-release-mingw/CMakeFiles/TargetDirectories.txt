@@ -1,0 +1,3 @@
+D:/embedded system/file_system/fs/cmake-build-release-mingw/CMakeFiles/fs.dir
+D:/embedded system/file_system/fs/cmake-build-release-mingw/CMakeFiles/edit_cache.dir
+D:/embedded system/file_system/fs/cmake-build-release-mingw/CMakeFiles/rebuild_cache.dir

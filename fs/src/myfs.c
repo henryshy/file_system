@@ -819,8 +819,8 @@ int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:ç›®å
         }
     }
     int pos = 0;
-    char *dir_exname = (char *) malloc(8);
-    char* filename=(char*) malloc(8);
+    char *dir_exname = (char *) malloc(MAX_EXNAME_LENGTH);
+    char* filename=(char*) malloc(MAX_FILENAME_LENGTH);
     strcpy(dir_exname, "dir");
     while (pos <= depth) {
         strcpy(filename,directory[pos]);
@@ -1001,6 +1001,7 @@ int my_write(int fd)
         open_file_list[fd].file_buff[write_length++]=(char)ch;
         ch=getchar();
     }
+    getchar();
    // fgets(open_file_list[fd].file_buff,MAX_FILE_BUFF_SIZE,stdin);
 
     write_length= strlen(open_file_list[fd].file_buff);
