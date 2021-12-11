@@ -6,20 +6,6 @@
 
 #IncludeRegexTransform: 
 
-../src/myfs.h
-stdio.h
--
-stdlib.h
-../src/stdlib.h
-string.h
-../src/string.h
-time.h
-../src/time.h
-
-D:/embedded system/file_system/fs/main.c
-myfs.h
-D:/embedded system/file_system/fs/myfs.h
-
 D:/embedded system/file_system/fs/src/myfs.c
 myfs.h
 D:/embedded system/file_system/fs/src/myfs.h

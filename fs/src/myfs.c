@@ -395,7 +395,11 @@ int my_cd(char* dirname)
         memset((char*)buff,0,MAX_TEXT_SIZE);
         return -1;
     }
-
+    if(fcb_index==-3){
+        printf("name length out of range!\n");
+        memset((char*)buff,0,MAX_TEXT_SIZE);
+        return -1;
+    }
     strcpy(cur_dir.filename,fcb_buff[fcb_index].filename);
     strcpy(cur_dir.exname,inode_ptr[fcb_buff[fcb_index].inode_index].exname);
     strcpy(cur_dir.dir,inode_ptr[fcb_buff[fcb_index].inode_index].dir);
@@ -447,12 +451,7 @@ int my_mkdir(char* dirname)
             split_index--;
         }
         char* dir_filename=dirname+split_index;
-        if(strlen(dir_filename)>MAX_FILENAME_LENGTH){
-            printf("name length out of range, create fail!\n");
-            free(absolute_dir);
-            memset((char*)buff,0,MAX_TEXT_SIZE);
-            return -1;
-        }
+
         strcpy(absolute_dir,inode_ptr[fcb_buff[0].inode_index].dir);
         strcat(absolute_dir,"/");
         strcat(absolute_dir,dir_filename);
@@ -517,6 +516,11 @@ int my_mkdir(char* dirname)
         memset((char*)buff,0,MAX_TEXT_SIZE);
         return -1;
     }
+    else  if(fcb_index==-3){
+        printf("name length out of range!\n");
+        memset((char*)buff,0,MAX_TEXT_SIZE);
+        return -1;
+    }
     memset((char*)buff,0,MAX_TEXT_SIZE);
     return 1;
 }
@@ -535,7 +539,11 @@ int my_rmdir(char *dirname)
         memset((char*)buff,0,MAX_TEXT_SIZE);
         return -1;
     }
-
+    if(fcb_index==-3){
+        printf("name length out of range!\n");
+        memset((char*)buff,0,MAX_TEXT_SIZE);
+        return -1;
+    }
     if(strcmp(cur_dir.dir,inode_ptr[fcb_buff[fcb_index].inode_index].dir)==0){
         printf("can not remove current directory, rmdir fail!\n");
         memset((char*)buff,0,MAX_TEXT_SIZE);
@@ -675,6 +683,11 @@ int my_create(char* filedir){ //创建数据文件
         memset((char*)buff,0,MAX_TEXT_SIZE);
         return -1;
     }
+    else if(fcb_index==-3){
+        printf("name length out of range!\n");
+        memset((char*)buff,0,MAX_TEXT_SIZE);
+        return -1;
+    }
     memset((char*)buff,0,MAX_TEXT_SIZE);
     return 1;
 }
@@ -689,7 +702,11 @@ int my_rm(char* filedir){//只能删除数据文件
         memset((char*)buff,0,MAX_TEXT_SIZE);
         return -1;
     }
-
+    if(fcb_index==-3){
+        printf("name length out of range!\n");
+        memset((char*)buff,0,MAX_TEXT_SIZE);
+        return -1;
+    }
 //在已打开文件列表里面查找这个文件
     for(int i=0;i<MAX_OPEN_FILE;i++){
         if(open_file_list[i].topenfile==0){
@@ -740,6 +757,11 @@ int my_open(char* filedir)
         memset((char*)buff,0,MAX_TEXT_SIZE);
         return -1;
     }
+    if(fcb_index==-3){
+        printf("name length out of range!\n");
+        memset((char*)buff,0,MAX_TEXT_SIZE);
+        return -1;
+    }
 //判断文件是否已经打开？
     for(int i=0;i<MAX_OPEN_FILE;i++){
         if(open_file_list[i].topenfile==0){
@@ -787,12 +809,12 @@ int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:目�
     }
 
 
-    char directory[20][20];
+    char directory[20][50];
     char *dir;
     dir = strtok(go_to_filedir, "/");
-    if(dir==NULL){
+    if(dir==NULL|| strlen(dir)>MAX_FILENAME_LENGTH){
         free(go_to_filedir);
-        return -2;
+        return -3;
     }
     strcpy(directory[0], dir);
     int fcb_index = -2;
@@ -811,16 +833,15 @@ int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:目�
         } else {
             depth++;
             if (depth > 19) {
-                printf("directory length out of range\n");
                 free(go_to_filedir);
-                return -2;
+                return -3;
             }
             strcpy(directory[depth], dir);
         }
     }
     int pos = 0;
-    char *dir_exname = (char *) malloc(MAX_EXNAME_LENGTH);
-    char* filename=(char*) malloc(MAX_FILENAME_LENGTH);
+    char *dir_exname = (char *) malloc(50);
+    char* filename=(char*) malloc(50);
     strcpy(dir_exname, "dir");
     while (pos <= depth) {
         strcpy(filename,directory[pos]);
@@ -844,7 +865,14 @@ int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:目�
                 }
                 filename[point_index-1]='\0';
                 strcpy(dir_exname, (char *) (directory[pos] + point_index));
-                if (strcmp(dir_exname, "dir") == 0) {
+
+                if (strlen(filename)>MAX_FILENAME_LENGTH|| strlen(dir_exname)>MAX_EXNAME_LENGTH) {
+                    free(dir_exname);
+                    free(filename);
+                    free(go_to_filedir);
+                    return -3;
+                }
+                if(strcmp(dir_exname, "dir") == 0){
                     free(dir_exname);
                     free(filename);
                     free(go_to_filedir);
@@ -1002,11 +1030,8 @@ int my_write(int fd)
         ch=getchar();
     }
     getchar();
+    open_file_list[fd].file_buff[write_length]='\0';
    // fgets(open_file_list[fd].file_buff,MAX_FILE_BUFF_SIZE,stdin);
-
-    write_length= strlen(open_file_list[fd].file_buff);
-    (open_file_list[fd].file_buff)[write_length-1]='\0';
-    write_length--;
 
     open_file_list[fd].fcbstate=write_method;
 
@@ -1084,7 +1109,7 @@ int do_read(int offset,int start_block, int tot_len, char* read_buff){//传入�
 
     return rw_offset;
 }
-int my_read(int fd)
+int  my_read(int fd)
 {
     if(fd >= MAX_OPEN_FILE || fd < 0){
         printf("file not found, read fail!\n");
@@ -1099,7 +1124,9 @@ int my_read(int fd)
 
     do_read(0,open_file_list[fd].first_block,open_file_list[fd].length,buff);
 
-    printf("read: %s\n",buff);
+    printf("filefd: %d read:\n",fd);
+    printf("%s",buff);
+
     memset((char*)buff,0,MAX_TEXT_SIZE);
     return 1;
 }
