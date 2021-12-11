@@ -31,7 +31,7 @@ typedef struct inode{
     u16_t first_block; //2B
     u32_t length;  //4B
     u8_t attribute;// 1B
-    u8_t free;  //±ê¼ÇÕû¸öinodeÊÇ·ñÎª¿Õ 0¿Õ 1²»¿Õ
+    u8_t free;  //æ ‡è®°æ•´ä¸ªinodeæ˜¯å¦ä¸ºç©º 0ç©º 1ä¸ç©º
 }inode;
 
 typedef struct USEROPEN{
@@ -42,8 +42,8 @@ typedef struct USEROPEN{
     u16_t first_block;
     u64_t length;
 
-    u8_t attribute;  // 0:Ä¿Â¼ 1:Êı¾İÎÄ¼ş
-    u8_t dir[80]; //µ±Ç°´ò¿ªÎÄ¼şµÄ¾ø¶ÔÂ·¾¶
+    u8_t attribute;  // 0:ç›®å½• 1:æ•°æ®æ–‡ä»¶
+    u8_t dir[80]; //å½“å‰æ‰“å¼€æ–‡ä»¶çš„ç»å¯¹è·¯å¾„
     u32_t rw_ptr;
     u8_t fcbstate;
     u8_t topenfile;
@@ -61,7 +61,7 @@ typedef struct BLOCK0{
 #define FILENAME "123.txt"
 #define BLOCK_SIZE 1024     //1MB
 #define vDRIVE_SIZE (DATA_AREA_SIZE+INODE_AREA_SIZE) //1000MB+80MB
-#define INODE_AREA_SIZE (sizeof(inode)*1000) //100MB×óÓÒ
+#define INODE_AREA_SIZE (sizeof(inode)*1000) //100MBå·¦å³
 #define DATA_AREA_SIZE 1024000
 #define END_OF_FILE 65535
 #define FREE_BLOCK 0
@@ -89,7 +89,7 @@ int get_free_block();
 int get_free_fd();
 int my_open(char* filedir);
 int my_write(int fd);
-int my_rm(char* filedir); //Ö»ÄÜÉ¾³ıÊı¾İÎÄ¼ş
+int my_rm(char* filedir); //åªèƒ½åˆ é™¤æ•°æ®æ–‡ä»¶
 int my_create(char* filedir);
 int my_close(int fd);
 void my_ls();
@@ -102,5 +102,5 @@ void error(char *command);
 void print_opended();
 void show_help();
 int get_free_inode();
-int go_to_file(char* filedir,int attribute,fcb *fcb_buff) ;  //attribute  0:Ä¿Â¼ 1:Êı¾İÎÄ¼ş
+int go_to_file(char* filedir,int attribute,fcb *fcb_buff) ;  //attribute  0:ç›®å½• 1:æ•°æ®æ–‡ä»¶
 #endif //FS_MYFS_H

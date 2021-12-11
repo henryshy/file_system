@@ -1,6 +1,6 @@
 #include "myfs.h"
 
-char* my_vdrive; //ĞéÄâ´ÅÅÌÆğÊ¼µØÖ·
+char* my_vdrive; //è™šæ‹Ÿç£ç›˜èµ·å§‹åœ°å€
 
 useropen open_file_list[MAX_OPEN_FILE];
 useropen cur_dir;
@@ -18,8 +18,8 @@ void parse_command() {
         command[strlen(command) - 1] = '\0';
         char *sp;
         int indexOfCmd = -1;
-        if (strcmp(command, "")) {       // ²»ÊÇ¿ÕÃüÁî
-            sp = strtok(command, " ");  // °Ñ¿Õ¸ñÇ°µÄÃüÁî·ÖÀë³öÀ´
+        if (strcmp(command, "")) {       // ä¸æ˜¯ç©ºå‘½ä»¤
+            sp = strtok(command, " ");  // æŠŠç©ºæ ¼å‰çš„å‘½ä»¤åˆ†ç¦»å‡ºæ¥
             //printf("%s\n",sp);
             for (int i = 0; i < 15; i++) {
                 if (strcmp(sp, cmd[i]) == 0) {
@@ -190,7 +190,7 @@ void error(char *command){
 
 void startsys()
 {
-    my_vdrive=(u8_t*) calloc(1,vDRIVE_SIZE); //ÄÚ´æ¿Õ¼ä
+    my_vdrive=(u8_t*) calloc(1,vDRIVE_SIZE); //å†…å­˜ç©ºé—´
 
     buff=(char*) calloc(1,MAX_TEXT_SIZE);
     FILE * fp= fopen(FILENAME,"r");
@@ -248,14 +248,14 @@ void exitsys()
 }
 void my_format()
 {
-//³õÊ¼»¯Òıµ¼¿é
+//åˆå§‹åŒ–å¼•å¯¼å—
     block0* boot_block=(block0*)my_vdrive;
 
     strcpy(boot_block->id,"myownsys");
     strcpy(boot_block->information,"123123123");
     boot_block->root_block=ROOT_BLOCK_INDEX;
     strcpy(boot_block->root_dir_name, "");
-//³õÊ¼»¯fat1ºÍfat2
+//åˆå§‹åŒ–fat1å’Œfat2
     fat* fat1;
     fat* fat2;
 
@@ -281,7 +281,7 @@ void my_format()
 
     fat1[5].index=END_OF_FILE;
     fat2[5].index=END_OF_FILE;
-//³õÊ¼»¯inode[0]Îª¸ùÄ¿Â¼µÄinode
+//åˆå§‹åŒ–inode[0]ä¸ºæ ¹ç›®å½•çš„inode
     inode* inode_ptr=INODE_PTR;
     time_t rawTime = time(NULL);
     struct tm *time = localtime(&rawTime);
@@ -293,17 +293,17 @@ void my_format()
     inode_ptr[0].attribute = 0;
     inode_ptr[0].length = 2 * sizeof(fcb);
     inode_ptr[0].free=1;
-//Îª¸ùÄ¿Â¼ĞÂ½¨Á½¸öÌØÊâµÄfcb£º.ºÍ.. inode¶¼Ö¸Ïòinode[0]
+//ä¸ºæ ¹ç›®å½•æ–°å»ºä¸¤ä¸ªç‰¹æ®Šçš„fcbï¼š.å’Œ.. inodeéƒ½æŒ‡å‘inode[0]
     fcb *root1 = (fcb*)getPtr_of_vDrive(ROOT_BLOCK_INDEX);
     root1->inode_index=0;
     strcpy(root1->filename, ".");
 
-    //root2 Ö¸Ïò¸ùÄ¿Â¼ÇøµÄµÚ¶ş¸öfcb,¼´ÌØÊâÄ¿Â¼Ïî..,ÒòÎª¸ùÄ¿Â¼ÇøÃ»ÓĞÉÏ¼¶Ä¿Â¼,ËùÒÔÖ¸Ïò×Ô¼º
+    //root2 æŒ‡å‘æ ¹ç›®å½•åŒºçš„ç¬¬äºŒä¸ªfcb,å³ç‰¹æ®Šç›®å½•é¡¹..,å› ä¸ºæ ¹ç›®å½•åŒºæ²¡æœ‰ä¸Šçº§ç›®å½•,æ‰€ä»¥æŒ‡å‘è‡ªå·±
     fcb* root2 = root1 + 1;
 
     strcpy(root2->filename, "..");
     root2->inode_index=0;
-//½«³õÊ¼»¯ºÃµÄÄÚ´æÇøÓòĞ´»ØÎÄ¼ş
+//å°†åˆå§‹åŒ–å¥½çš„å†…å­˜åŒºåŸŸå†™å›æ–‡ä»¶
     FILE *fp = fopen(FILENAME, "w+");
     fwrite(my_vdrive, vDRIVE_SIZE, 1, fp);
     fclose(fp);
@@ -320,9 +320,9 @@ void my_ls()
     fcb_buff=(fcb*) buff;
     for(int i=0;i<fcb_count;i++){
         if(inode_ptr[fcb_buff[i].inode_index].free == 1){
-            //Ä¿Â¼ÎÄ¼ş
-            //Í¬Àí,Äê·İÕ¼7Î»,ÔÂ·İÕ¼4Î»,ÈÕÆÚÕ¼5Î»
-            //Ğ¡Ê±Õ¼5Î»,·ÖÖÓÕ¼6Î»,ÃëÕ¼5Î»
+            //ç›®å½•æ–‡ä»¶
+            //åŒç†,å¹´ä»½å 7ä½,æœˆä»½å 4ä½,æ—¥æœŸå 5ä½
+            //å°æ—¶å 5ä½,åˆ†é’Ÿå 6ä½,ç§’å 5ä½
             if(inode_ptr[fcb_buff[i].inode_index].attribute == 0){
                 if(strcmp(fcb_buff[i].filename,"..")!=0&&strcmp(fcb_buff[i].filename,".")!=0) {
                     printf("%s\t%dB\t<DIR>\t%d/%d/%d\t%02d:%02d:%02d\n",
@@ -390,7 +390,7 @@ int my_cd(char* dirname)
     inode* inode_ptr=INODE_PTR;
     int fcb_index= go_to_file(dirname,0,fcb_buff);
 
-    if(fcb_index==-1||fcb_index==-2){ //Ã»ÕÒµ½Ä¿Â¼ÎÄ¼şµÄfcb
+    if(fcb_index==-1||fcb_index==-2){ //æ²¡æ‰¾åˆ°ç›®å½•æ–‡ä»¶çš„fcb
         printf("no such file or directory, cd fail!\n");
         memset((char*)buff,0,MAX_TEXT_SIZE);
         return -1;
@@ -435,7 +435,7 @@ int my_mkdir(char* dirname)
     int fcb_index= go_to_file(dirname,0,fcb_buff);
 
 
-    if(fcb_index==-1)//ÊÇ×îºóÒ»²ãÕÒ²»µ½,ËµÃ÷Õâ¸öÎÄ¼ş»¹Ã»ÓĞ±»´´½¨,Ôò°ÑËû×·¼Óµ½fcbÁĞ±íÄ©Î²
+    if(fcb_index==-1)//æ˜¯æœ€åä¸€å±‚æ‰¾ä¸åˆ°,è¯´æ˜è¿™ä¸ªæ–‡ä»¶è¿˜æ²¡æœ‰è¢«åˆ›å»º,åˆ™æŠŠä»–è¿½åŠ åˆ°fcbåˆ—è¡¨æœ«å°¾
     {
         char* absolute_dir=(char*)  calloc(1,80);
         int length= strlen(dirname);
@@ -459,7 +459,7 @@ int my_mkdir(char* dirname)
 
         fat1[free_block-1].index=END_OF_FILE;
         memcpy(fat2,fat1,BLOCK_SIZE*2);
-//¸øĞÂ½¨µÄfcb¸³Öµ
+//ç»™æ–°å»ºçš„fcbèµ‹å€¼
 
         fcb_buff[fcb_index].inode_index=inode_index;
         strcpy(fcb_buff[fcb_index].filename, dir_filename);
@@ -473,14 +473,14 @@ int my_mkdir(char* dirname)
         inode_ptr[inode_index].free = 1;
         inode_ptr[inode_index].length = 2*sizeof (fcb);
         inode_ptr[inode_index].attribute = 0;
-//ĞŞ¸Ä¸¸Ä¿Â¼µÄinode
+//ä¿®æ”¹çˆ¶ç›®å½•çš„inode
         inode_ptr[fcb_buff[0].inode_index].length+=sizeof (fcb);
 
         do_write(inode_ptr[fcb_buff[0].inode_index].first_block, 0, (char*)fcb_buff, inode_ptr[fcb_buff[0].inode_index].length);
 
 
 
-//ÅĞ¶Ïµ±Ç°´ò¿ªÄ¿Â¼ÊÇ·ñĞèÒªĞŞ¸Ä
+//åˆ¤æ–­å½“å‰æ‰“å¼€ç›®å½•æ˜¯å¦éœ€è¦ä¿®æ”¹
         if(dirname[0]=='/'){
             if(cur_dir.first_block==ROOT_BLOCK_INDEX){
                 cur_dir.length=inode_ptr[fcb_buff[0].inode_index].length;
@@ -489,7 +489,7 @@ int my_mkdir(char* dirname)
         else{
             cur_dir.length=inode_ptr[fcb_buff[0].inode_index].length;
         }
-//ÔÚĞÂµÄÄ¿Â¼ÎÄ¼şÖĞ´´½¨.ºÍ..Á½¸öÌØÊâÄ¿Â¼Ïî
+//åœ¨æ–°çš„ç›®å½•æ–‡ä»¶ä¸­åˆ›å»º.å’Œ..ä¸¤ä¸ªç‰¹æ®Šç›®å½•é¡¹
         fcb* new_fcb=(fcb*) calloc(2,sizeof (fcb));
         strcpy(new_fcb[0].filename,".");
         new_fcb[0].inode_index=inode_index;
@@ -500,7 +500,7 @@ int my_mkdir(char* dirname)
         do_write(inode_ptr[inode_index].first_block,0,(char*)new_fcb,2*sizeof (fcb));
         free(new_fcb);
     }
-    else if(fcb_index==-2)//²»ÊÇ×îºóÒ»²ã£¬Ã»ÕÒµ½Ä¿Â¼£¬±¨´íÍË³ö
+    else if(fcb_index==-2)//ä¸æ˜¯æœ€åä¸€å±‚ï¼Œæ²¡æ‰¾åˆ°ç›®å½•ï¼ŒæŠ¥é”™é€€å‡º
     {
         printf("no such file or directory, mkdir fail!\n");
         memset((char*)buff,0,MAX_TEXT_SIZE);
@@ -540,7 +540,7 @@ int my_rmdir(char *dirname)
         memset((char*)buff,0,MAX_TEXT_SIZE);
         return -1;
     }
-//´Ófcb_buffÖĞÉ¾³ıÄÇ¸öfcb£¬ÕûºÏÕû¸öfcb_buff
+//ä»fcb_buffä¸­åˆ é™¤é‚£ä¸ªfcbï¼Œæ•´åˆæ•´ä¸ªfcb_buff
     for(int i=fcb_index; i < inode_ptr[fcb_buff[0].inode_index].length; i++){
         memcpy((fcb*)(fcb_buff+i),(fcb*)(fcb_buff+i+1),sizeof (fcb));
     }
@@ -550,11 +550,11 @@ int my_rmdir(char *dirname)
     inode_ptr[fcb_buff[fcb_index].inode_index].time = (time->tm_hour) * 2048 + (time->tm_min) * 32 + (time->tm_sec) / 2;
     inode_ptr[fcb_buff[fcb_index].inode_index].length-=sizeof (fcb);
     inode_ptr[fcb_buff[0].inode_index].length-=sizeof(fcb);
-//ÅĞ¶ÏÉ¾³ıµÄÊÇ·ñÊÇµ±Ç°´ò¿ªÄ¿Â¼µÄÏÂµÄÎÄ¼ş
+//åˆ¤æ–­åˆ é™¤çš„æ˜¯å¦æ˜¯å½“å‰æ‰“å¼€ç›®å½•çš„ä¸‹çš„æ–‡ä»¶
     if(strcmp(cur_dir.dir,inode_ptr[fcb_buff[0].inode_index].dir)==0){
         cur_dir.length-=sizeof (fcb);
     }
-//½«fcb_buffĞ´»Ø´ÅÅÌ£¬Ğ´ÍêÇå¿Õ»º´æ
+//å°†fcb_buffå†™å›ç£ç›˜ï¼Œå†™å®Œæ¸…ç©ºç¼“å­˜
     do_write(inode_ptr[fcb_buff[0].inode_index].first_block,0,(char*)fcb_buff,(inode_ptr[fcb_buff[0].inode_index].length-1)*sizeof (fcb));
 
     memset((char*)buff,0,MAX_TEXT_SIZE);
@@ -562,8 +562,8 @@ int my_rmdir(char *dirname)
 }
 
 
-int my_create(char* filedir){ //´´½¨Êı¾İÎÄ¼ş
-//»ñÈ¡Ò»¸öĞÂÅÌ¿é£¬Ã»ÓĞÔòÍË³ö
+int my_create(char* filedir){ //åˆ›å»ºæ•°æ®æ–‡ä»¶
+//è·å–ä¸€ä¸ªæ–°ç›˜å—ï¼Œæ²¡æœ‰åˆ™é€€å‡º
     if(filedir[strlen(filedir)-1]=='/'){
         printf("format error, mkdir fail!\n");
         return -1;
@@ -580,14 +580,14 @@ int my_create(char* filedir){ //´´½¨Êı¾İÎÄ¼ş
     }
 
 
-//¿ªÊ¼Öğ¼¶¶ÁÈ¡Ä¿Â¼fcb
+//å¼€å§‹é€çº§è¯»å–ç›®å½•fcb
 
     inode* inode_ptr=INODE_PTR;
     fcb* fcb_buff=(fcb*)buff;
     int fcb_index= go_to_file(filedir,1,fcb_buff);
 
 
-    if(fcb_index==-1)//ÊÇ×îºóÒ»²ãÕÒ²»µ½,ËµÃ÷Õâ¸öÎÄ¼ş»¹Ã»ÓĞ±»´´½¨,Ôò°ÑËû×·¼Óµ½fcbÁĞ±íÄ©Î²
+    if(fcb_index==-1)//æ˜¯æœ€åä¸€å±‚æ‰¾ä¸åˆ°,è¯´æ˜è¿™ä¸ªæ–‡ä»¶è¿˜æ²¡æœ‰è¢«åˆ›å»º,åˆ™æŠŠä»–è¿½åŠ åˆ°fcbåˆ—è¡¨æœ«å°¾
     {
         char* absolute_dir=(char*)  calloc(1,80);
 
@@ -625,7 +625,7 @@ int my_create(char* filedir){ //´´½¨Êı¾İÎÄ¼ş
 
         fat1[free_block-1].index=END_OF_FILE;
         memcpy(fat2,fat1,BLOCK_SIZE*2);
-//¸øĞÂ½¨µÄfcb¸³Öµ
+//ç»™æ–°å»ºçš„fcbèµ‹å€¼
 
         fcb_buff[fcb_index].inode_index=inode_index;
         strcpy(fcb_buff[fcb_index].filename, filename);
@@ -639,7 +639,7 @@ int my_create(char* filedir){ //´´½¨Êı¾İÎÄ¼ş
         inode_ptr[inode_index].free = 1;
         inode_ptr[inode_index].length = 0;
         inode_ptr[inode_index].attribute = 1;
-//ĞŞ¸ÄÄ¿Â¼µÄinode
+//ä¿®æ”¹ç›®å½•çš„inode
         inode_ptr[fcb_buff[0].inode_index].length+=sizeof (fcb);
 
 
@@ -650,7 +650,7 @@ int my_create(char* filedir){ //´´½¨Êı¾İÎÄ¼ş
             cur_dir.length+=sizeof (fcb);
         }
     }
-    else if(fcb_index==-2)//²»ÊÇ×îºóÒ»²ã£¬Ã»ÕÒµ½Ä¿Â¼£¬±¨´íÍË³ö
+    else if(fcb_index==-2)//ä¸æ˜¯æœ€åä¸€å±‚ï¼Œæ²¡æ‰¾åˆ°ç›®å½•ï¼ŒæŠ¥é”™é€€å‡º
     {
         printf("no such file or directory, create fail!\n");
         memset((char*)buff,0,MAX_TEXT_SIZE);
@@ -664,7 +664,7 @@ int my_create(char* filedir){ //´´½¨Êı¾İÎÄ¼ş
     memset((char*)buff,0,MAX_TEXT_SIZE);
     return 1;
 }
-int my_rm(char* filedir){//Ö»ÄÜÉ¾³ıÊı¾İÎÄ¼ş
+int my_rm(char* filedir){//åªèƒ½åˆ é™¤æ•°æ®æ–‡ä»¶
 
     inode* inode_ptr=INODE_PTR;
     fcb* fcb_buff=(fcb*)buff;
@@ -676,7 +676,7 @@ int my_rm(char* filedir){//Ö»ÄÜÉ¾³ıÊı¾İÎÄ¼ş
         return -1;
     }
 
-//ÔÚÒÑ´ò¿ªÎÄ¼şÁĞ±íÀïÃæ²éÕÒÕâ¸öÎÄ¼ş
+//åœ¨å·²æ‰“å¼€æ–‡ä»¶åˆ—è¡¨é‡Œé¢æŸ¥æ‰¾è¿™ä¸ªæ–‡ä»¶
     for(int i=0;i<MAX_OPEN_FILE;i++){
         if(open_file_list[i].topenfile==0){
             continue;
@@ -689,7 +689,7 @@ int my_rm(char* filedir){//Ö»ÄÜÉ¾³ıÊı¾İÎÄ¼ş
         }
     }
 
-//´Ófcb_buffÖĞÉ¾³ıÄÇ¸öfcb£¬ÕûºÏÕû¸öfcb_buff
+//ä»fcb_buffä¸­åˆ é™¤é‚£ä¸ªfcbï¼Œæ•´åˆæ•´ä¸ªfcb_buff
     for(int i=fcb_index; i < inode_ptr[fcb_buff[0].inode_index].length; i++){
         memcpy((fcb*)(fcb_buff+i),(fcb*)(fcb_buff+i+1),sizeof (fcb));
     }
@@ -699,11 +699,11 @@ int my_rm(char* filedir){//Ö»ÄÜÉ¾³ıÊı¾İÎÄ¼ş
     inode_ptr[fcb_buff[fcb_index].inode_index].time = (time->tm_hour) * 2048 + (time->tm_min) * 32 + (time->tm_sec) / 2;
     inode_ptr[fcb_buff[fcb_index].inode_index].length-=sizeof (fcb);
 
-//ÅĞ¶ÏÉ¾³ıµÄÊÇ·ñÊÇµ±Ç°´ò¿ªÄ¿Â¼µÄÏÂµÄÎÄ¼ş
+//åˆ¤æ–­åˆ é™¤çš„æ˜¯å¦æ˜¯å½“å‰æ‰“å¼€ç›®å½•çš„ä¸‹çš„æ–‡ä»¶
     if(strcmp(cur_dir.dir,inode_ptr[fcb_buff[0].inode_index].dir)==0){
         cur_dir.length-=sizeof (fcb);
     }
-//½«fcb_buffĞ´»Ø´ÅÅÌ£¬Ğ´ÍêÇå¿Õ»º´æ
+//å°†fcb_buffå†™å›ç£ç›˜ï¼Œå†™å®Œæ¸…ç©ºç¼“å­˜
     do_write(inode_ptr[fcb_buff[0].inode_index].first_block,0,(char*)fcb_buff,(inode_ptr[fcb_buff[0].inode_index].length-1)*sizeof (fcb));
 
 
@@ -712,7 +712,7 @@ int my_rm(char* filedir){//Ö»ÄÜÉ¾³ıÊı¾İÎÄ¼ş
 }
 int my_open(char* filedir)
 {
-//ÅĞ¶ÏÓĞÃ»ÓĞ´Ó³¬¹ı´ò¿ªÎÄ¼şÉÏÏŞ
+//åˆ¤æ–­æœ‰æ²¡æœ‰ä»è¶…è¿‡æ‰“å¼€æ–‡ä»¶ä¸Šé™
     int new_fd=get_free_fd();
     if(new_fd==-1){
         printf("can not open, open file list is full!\n");
@@ -726,7 +726,7 @@ int my_open(char* filedir)
         memset((char*)buff,0,MAX_TEXT_SIZE);
         return -1;
     }
-//ÅĞ¶ÏÎÄ¼şÊÇ·ñÒÑ¾­´ò¿ª£¿
+//åˆ¤æ–­æ–‡ä»¶æ˜¯å¦å·²ç»æ‰“å¼€ï¼Ÿ
     for(int i=0;i<MAX_OPEN_FILE;i++){
         if(open_file_list[i].topenfile==0){
             continue;
@@ -737,7 +737,7 @@ int my_open(char* filedir)
             return -1;
         }
     }
-//·ÖÅäÒ»¸öĞÂµÄopen_file_list±íÏî£¬²¢¸³Öµ
+//åˆ†é…ä¸€ä¸ªæ–°çš„open_file_listè¡¨é¡¹ï¼Œå¹¶èµ‹å€¼
     strcpy(open_file_list[new_fd].filename,fcb_buff[fcb_index].filename);
     strcpy(open_file_list[new_fd].exname,inode_ptr[fcb_buff[fcb_index].inode_index].exname);
     open_file_list[new_fd].time=inode_ptr[fcb_buff[fcb_index].inode_index].time;
@@ -749,25 +749,25 @@ int my_open(char* filedir)
     open_file_list[new_fd].rw_ptr=0;
     open_file_list[new_fd].fcbstate=0;
     open_file_list[new_fd].topenfile=1;
-//´´½¨ĞÂµÄÎÄ¼ş»º´æ
+//åˆ›å»ºæ–°çš„æ–‡ä»¶ç¼“å­˜
     open_file_list[new_fd].file_buff=(char*) calloc(1,MAX_FILE_BUFF_SIZE);
 
     memset((char*)buff,0,MAX_TEXT_SIZE);
 }
 
-int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:Ä¿Â¼ 1:Êı¾İÎÄ¼ş
+int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:ç›®å½• 1:æ•°æ®æ–‡ä»¶
 
     inode *inode_ptr = INODE_PTR;
     int fcb_count = -2;
     int start_block;
     char* go_to_filedir=(char*) calloc(1,80);
     strcpy(go_to_filedir,filedir);
-    if (go_to_filedir[0] == '/') { //Èç¹ûÊäÈëµÄÊÇ¾ø¶ÔÂ·¾¶
-        //´Ó¸ùÄ¿Â¼¿ªÊ¼²éÕÒ
+    if (go_to_filedir[0] == '/') { //å¦‚æœè¾“å…¥çš„æ˜¯ç»å¯¹è·¯å¾„
+        //ä»æ ¹ç›®å½•å¼€å§‹æŸ¥æ‰¾
         start_block = ROOT_BLOCK_INDEX;
         fcb_count = inode_ptr[((fcb *) getPtr_of_vDrive(((block0 *) my_vdrive)->root_block))->inode_index].length /sizeof(fcb);
     } else {
-        //´Óµ±Ç°Ä¿Â¼¿ªÊ¼ÕÒ
+        //ä»å½“å‰ç›®å½•å¼€å§‹æ‰¾
         start_block = cur_dir.first_block;
         fcb_count = cur_dir.length / sizeof(fcb);
     }
@@ -788,7 +788,7 @@ int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:Ä¿Â¼
         memset((char *) buff, 0, MAX_TEXT_SIZE);
         return -2;
     }
-//¿ªÊ¼Ò»²ãÒ»²ã¶Á
+//å¼€å§‹ä¸€å±‚ä¸€å±‚è¯»
     int depth = 0;
     while (1) {
         dir = strtok(NULL, "/");
@@ -811,7 +811,7 @@ int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:Ä¿Â¼
     while (pos <= depth) {
         strcpy(filename,directory[pos]);
         if (pos == depth) {
-            if (attribute == 0) { //×îºóÒ»¸öÊÇÄ¿Â¼
+            if (attribute == 0) { //æœ€åä¸€ä¸ªæ˜¯ç›®å½•
                 //do nothing
             } else if (attribute == 1) {
                 int length = strlen(directory[pos]);
@@ -842,34 +842,34 @@ int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:Ä¿Â¼
         memset((char *) fcb_buff, 0, MAX_TEXT_SIZE);
         do_read(0, start_block, fcb_count * sizeof(fcb), (char *) fcb_buff);
 
-        for (int i = 0; i < fcb_count; i++) { //ÔÚfcbÁĞ±íÖĞÕÒµ½Ä¿Â¼fcb
+        for (int i = 0; i < fcb_count; i++) { //åœ¨fcbåˆ—è¡¨ä¸­æ‰¾åˆ°ç›®å½•fcb
             if (strcmp(fcb_buff[i].filename, filename) == 0 &&strcmp(inode_ptr[fcb_buff[i].inode_index].exname, dir_exname) == 0) {
                 fcb_index = i;
                 break;
             }
         }
 
-        if (fcb_index == -2) { //Ã»ÕÒµ½Ä¿Â¼ÎÄ¼şµÄfcb
-            //ÅĞ¶Ï²éÕÒµÄÊÇ²»ÊÇÂ·¾¶ÖĞ×îºóÒ»²ã
-            if (pos != depth) {  //²»ÊÇ×îºóÒ»²ã£¬Ã»ÕÒµ½Ä¿Â¼£¬·µ»Ø-2
+        if (fcb_index == -2) { //æ²¡æ‰¾åˆ°ç›®å½•æ–‡ä»¶çš„fcb
+            //åˆ¤æ–­æŸ¥æ‰¾çš„æ˜¯ä¸æ˜¯è·¯å¾„ä¸­æœ€åä¸€å±‚
+            if (pos != depth) {  //ä¸æ˜¯æœ€åä¸€å±‚ï¼Œæ²¡æ‰¾åˆ°ç›®å½•ï¼Œè¿”å›-2
                 free(dir_exname);
                 free(filename);
                 free(go_to_filedir);
                 return fcb_index;
-            } else { //ÊÇ×îºóÒ»²ã,·µ»Ø-1
+            } else { //æ˜¯æœ€åä¸€å±‚,è¿”å›-1
                 fcb_index = -1;
                 free(dir_exname);
                 free(filename);
                 free(go_to_filedir);
                 return fcb_index;
             }
-        } else { //ÕÒµ½Ä¿Â¼fcb
-            //ÅĞ¶ÏÊÇ²»ÊÇ×îºóÒ»²ã
-            if (pos != depth) { //²»ÊÇ×îºóÒ»²ãÔòÔÙÍùÏÂÒ»²ã×ß
+        } else { //æ‰¾åˆ°ç›®å½•fcb
+            //åˆ¤æ–­æ˜¯ä¸æ˜¯æœ€åä¸€å±‚
+            if (pos != depth) { //ä¸æ˜¯æœ€åä¸€å±‚åˆ™å†å¾€ä¸‹ä¸€å±‚èµ°
                 fcb_count = inode_ptr[fcb_buff[fcb_index].inode_index].length / sizeof(fcb);
                 start_block = inode_ptr[fcb_buff[fcb_index].inode_index].first_block;
                 fcb_index = -2;
-            } else {//ÊÇ×îºóÒ»²ã£¬¶øÇÒÕÒµ½ÁË£¬·µ»ØÎ»ÖÃ
+            } else {//æ˜¯æœ€åä¸€å±‚ï¼Œè€Œä¸”æ‰¾åˆ°äº†ï¼Œè¿”å›ä½ç½®
                 free(dir_exname);
                 free(filename);
                 free(go_to_filedir);
@@ -886,22 +886,22 @@ int go_to_file(char* filedir,int attribute,fcb *fcb_buff) {  //attribute  0:Ä¿Â¼
 
 int my_close(int fd)
 {
-//ÅĞ¶ÏfdµÄ·¶Î§ÊÇ·ñºÏ·¨
+//åˆ¤æ–­fdçš„èŒƒå›´æ˜¯å¦åˆæ³•
     if(fd<0||fd>MAX_OPEN_FILE){
         printf("fd error, close fail!\n");
         return -1;
     }
-//ÅĞ¶Ï´ò¿ªÎÄ¼şµÄÒ»Ğ©ÊôĞÔ
-    if(open_file_list[fd].topenfile==0){ //¸ÃÏîÎª¿Õ
+//åˆ¤æ–­æ‰“å¼€æ–‡ä»¶çš„ä¸€äº›å±æ€§
+    if(open_file_list[fd].topenfile==0){ //è¯¥é¡¹ä¸ºç©º
         printf("file not opened ,close fail!\n");
         return -1;
     }
-    if(open_file_list[fd].attribute==0){ //´ò¿ªµÄÊÇÒ»¸öÄ¿Â¼ÎÄ¼ş£¨Õı³£ÓÀÔ¶Îª0£¬ÒòÎª²»ÄÜ´ò¿ªÄ¿Â¼ÎÄ¼ş£©
+    if(open_file_list[fd].attribute==0){ //æ‰“å¼€çš„æ˜¯ä¸€ä¸ªç›®å½•æ–‡ä»¶ï¼ˆæ­£å¸¸æ°¸è¿œä¸º0ï¼Œå› ä¸ºä¸èƒ½æ‰“å¼€ç›®å½•æ–‡ä»¶ï¼‰
         printf("can not close a directory file, close fail!\n");
         return -1;
     }
 
-    if(open_file_list[fd].fcbstate==0){ //ÎÄ¼şÓĞÃ»ÓĞ±»ĞŞ¸Ä¹ı
+    if(open_file_list[fd].fcbstate==0){ //æ–‡ä»¶æœ‰æ²¡æœ‰è¢«ä¿®æ”¹è¿‡
         printf("closed %s\n",open_file_list[fd].dir);
         free(open_file_list[fd].file_buff);
         memset((char*)(&open_file_list[fd]),0,sizeof (useropen));
@@ -909,7 +909,7 @@ int my_close(int fd)
         return 1;
     }
     fat* fat1=FAT1_PTR;
-//½«ÎÄ¼şµÄ»º´æĞ´Èëµ½´ÅÅÌ
+//å°†æ–‡ä»¶çš„ç¼“å­˜å†™å…¥åˆ°ç£ç›˜
     int offset=open_file_list[fd].rw_ptr;
     int write_block=open_file_list[fd].first_block;
     int write_length= strlen(open_file_list[fd].file_buff);
@@ -934,13 +934,13 @@ int my_close(int fd)
             break;
     }
 
-//µ÷ÓÃgo_to_fileÕÒµ½ÎÄ¼ş¸¸Ä¿Â¼µÄfcbÁĞ±íÒÔ¼°ÎÄ¼şfcbµÄÎ»ÖÃ
+//è°ƒç”¨go_to_fileæ‰¾åˆ°æ–‡ä»¶çˆ¶ç›®å½•çš„fcbåˆ—è¡¨ä»¥åŠæ–‡ä»¶fcbçš„ä½ç½®
     fcb* fcb_buff=(fcb*) buff;
     inode* inode_ptr=INODE_PTR;
     int fcb_index= go_to_file(open_file_list[fd].dir,1,fcb_buff);
 
 
-//¸üĞÂÎÄ¼şµÄfcb
+//æ›´æ–°æ–‡ä»¶çš„fcb
     inode_ptr[fcb_buff[fcb_index].inode_index].length=open_file_list[fd].length;
     time_t rawtime = time(NULL);
     struct tm* time = localtime(&rawtime);
@@ -950,7 +950,7 @@ int my_close(int fd)
     do_write(inode_ptr[fcb_buff[0].inode_index].first_block,fcb_index*sizeof (fcb),(char*)(fcb_buff+fcb_index),sizeof (fcb));
 
     printf("closed %s\n",open_file_list[fd].dir);
-//ÔÚopen_file_listÖĞÇå¿Õ¸ÄÎÄ¼ş¶ÔÓ¦µÄ±íÏî£¬ÊÍ·ÅÎÄ¼ş»º³åÇøÄÚ´æ
+//åœ¨open_file_listä¸­æ¸…ç©ºæ”¹æ–‡ä»¶å¯¹åº”çš„è¡¨é¡¹ï¼Œé‡Šæ”¾æ–‡ä»¶ç¼“å†²åŒºå†…å­˜
     memset(&open_file_list[fd],0,sizeof (useropen));
     free(open_file_list[fd].file_buff);
 
@@ -997,7 +997,7 @@ int my_write(int fd)
 
     return write_length;
 }
-int do_write(int start_block,int offset, char* text, int tot_len) {//´«ÈëµÄoffsetÎªÎÄ¼şÄÚÆ«ÒÆ
+int do_write(int start_block,int offset, char* text, int tot_len) {//ä¼ å…¥çš„offsetä¸ºæ–‡ä»¶å†…åç§»
     fat* fat1=FAT1_PTR;
 
     int write_len=0;
@@ -1039,7 +1039,7 @@ int do_write(int start_block,int offset, char* text, int tot_len) {//´«ÈëµÄoffse
     }
     return write_len;
 }
-int do_read(int offset,int start_block, int tot_len, char* read_buff){//´«ÈëµÄoffsetÎª¿éÄÚÆ«ÒÆ
+int do_read(int offset,int start_block, int tot_len, char* read_buff){//ä¼ å…¥çš„offsetä¸ºå—å†…åç§»
     fat* fat1=(fat*)FAT1_PTR;
 
     int rw_offset=0;
