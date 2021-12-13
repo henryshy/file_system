@@ -18,7 +18,7 @@ void parse_command() {
         command[strlen(command) - 1] = '\0';
         char *sp;
         int indexOfCmd = -1;
-        if (strcmp(command, "")) {       // 不是空命令
+        if (strcmp(command, "")!=0) {       // 不是空命令
             sp = strtok(command, " ");  // 把空格前的命令分离出来
             //printf("%s\n",sp);
             for (int i = 0; i < 15; i++) {
@@ -27,7 +27,7 @@ void parse_command() {
                     break;
                 }
             }
-            int ret=0;
+            int ret;
             switch (indexOfCmd) {
                 case 0:         // mkdir
                     sp = strtok(NULL, " ");
@@ -94,7 +94,7 @@ void parse_command() {
                     if (sp != NULL) {
                         int fd;
                         char *left;
-                        fd = strtol(sp, &left, 20);
+                        fd = (int)strtol(sp, &left, 20);
                         if(strcmp(left,"")==0) {
                             my_close(fd);
                         }
@@ -112,7 +112,7 @@ void parse_command() {
                     if (sp != NULL) {
                         int fd;
                         char *left;
-                        fd = strtol(sp, &left, 20);
+                        fd = (int)strtol(sp, &left, 20);
                         if(strcmp(left,"")==0) {
                             my_write(fd);
                         }
@@ -130,7 +130,7 @@ void parse_command() {
                     if (sp != NULL) {
                         int fd;
                         char *left;
-                        fd = strtol(sp, &left, 20);
+                        fd = (int)strtol(sp, &left, 20);
                         if(strcmp(left,"")==0) {
                             my_read(fd);
                         }
@@ -154,7 +154,7 @@ void parse_command() {
                     print_opended();
                     break;
                 default:
-                    printf("command not found\n", sp);
+                    printf("command not found\n");
                     break;
             }
         }
@@ -166,7 +166,7 @@ void print_opended() {
         if(open_file_list[i].topenfile==0){
             continue;
         }
-        printf("%d\t%s\t%dB\n",i,open_file_list[i].dir,open_file_list[i].length);
+        printf("%d\t%s\t%dB\n",i,open_file_list[i].dir,(int)open_file_list[i].length);
     }
 }
 void show_help()
@@ -190,7 +190,7 @@ void error(char *command){
 
 void startsys()
 {
-    my_vdrive=(u8_t*) calloc(1,vDRIVE_SIZE); //内存空间
+    my_vdrive=(char*) calloc(1,vDRIVE_SIZE); //内存空间
 
     buff=(char*) calloc(1,MAX_TEXT_SIZE);
     FILE * fp= fopen(FILENAME,"r");
@@ -1031,7 +1031,7 @@ int my_write(int fd)
 
     open_file_list[fd].fcbstate=write_method;
 
-    return write_length;
+    return (int)write_length;
 }
 int do_write(int start_block,int offset, char* text, int tot_len) {//传入的offset为文件内偏移
     fat* fat1=FAT1_PTR;
@@ -1118,7 +1118,7 @@ int  my_read(int fd)
     open_file_list[fd].rw_ptr = 0;
 
 
-    do_read(0,open_file_list[fd].first_block,open_file_list[fd].length,buff);
+    do_read(0,open_file_list[fd].first_block,(int)open_file_list[fd].length,buff);
 
     printf("filefd: %d read:\n",fd);
     printf("%s",buff);
