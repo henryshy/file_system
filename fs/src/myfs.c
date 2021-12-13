@@ -1,7 +1,6 @@
 #include "myfs.h"
 
 char* my_vdrive; //虚拟磁盘起始地址
-
 useropen open_file_list[MAX_OPEN_FILE];
 useropen cur_dir;
 char* buff;
@@ -479,6 +478,8 @@ int my_mkdir(char* dirname)
         inode_ptr[inode_index].attribute = 0;
 //修改父目录的inode
         inode_ptr[fcb_buff[0].inode_index].length+=sizeof (fcb);
+        inode_ptr[fcb_buff[0].inode_index].date = (time->tm_year - 100) * 512 + (time->tm_mon + 1) * 32 + (time->tm_mday);
+        inode_ptr[fcb_buff[0].inode_index].time = (time->tm_hour) * 2048 + (time->tm_min) * 32 + (time->tm_sec) / 2;
 
         do_write(inode_ptr[fcb_buff[0].inode_index].first_block, 0, (char*)fcb_buff, inode_ptr[fcb_buff[0].inode_index].length);
 
@@ -556,9 +557,8 @@ int my_rmdir(char *dirname)
     }
     time_t rawtime = time(NULL);
     struct tm* time = localtime(&rawtime);
-    inode_ptr[fcb_buff[fcb_index].inode_index].date = (time->tm_year - 100) * 512 + (time->tm_mon + 1) * 32 + (time->tm_mday);
-    inode_ptr[fcb_buff[fcb_index].inode_index].time = (time->tm_hour) * 2048 + (time->tm_min) * 32 + (time->tm_sec) / 2;
-    inode_ptr[fcb_buff[fcb_index].inode_index].length-=sizeof (fcb);
+    inode_ptr[fcb_buff[0].inode_index].date = (time->tm_year - 100) * 512 + (time->tm_mon + 1) * 32 + (time->tm_mday);
+    inode_ptr[fcb_buff[0].inode_index].time = (time->tm_hour) * 2048 + (time->tm_min) * 32 + (time->tm_sec) / 2;
     inode_ptr[fcb_buff[0].inode_index].length-=sizeof(fcb);
 //判断删除的是否是当前打开目录的下的文件
     if(strcmp(cur_dir.dir,inode_ptr[fcb_buff[0].inode_index].dir)==0){
@@ -656,8 +656,10 @@ int my_create(char* filedir){ //创建数据文件
         inode_ptr[inode_index].free = 1;
         inode_ptr[inode_index].length = 0;
         inode_ptr[inode_index].attribute = 1;
-//修改目录的inode
+//修改父目录的inode
         inode_ptr[fcb_buff[0].inode_index].length+=sizeof (fcb);
+        inode_ptr[fcb_buff[0].inode_index].date = (time->tm_year - 100) * 512 + (time->tm_mon + 1) * 32 + (time->tm_mday);
+        inode_ptr[fcb_buff[0].inode_index].time = (time->tm_hour) * 2048 + (time->tm_min) * 32 + (time->tm_sec) / 2;
 
 
         do_write(inode_ptr[fcb_buff[0].inode_index].first_block, 0, (char*)fcb_buff, inode_ptr[fcb_buff[0].inode_index].length);
@@ -722,9 +724,9 @@ int my_rm(char* filedir){//只能删除数据文件
     }
     time_t rawtime = time(NULL);
     struct tm* time = localtime(&rawtime);
-    inode_ptr[fcb_buff[fcb_index].inode_index].date = (time->tm_year - 100) * 512 + (time->tm_mon + 1) * 32 + (time->tm_mday);
-    inode_ptr[fcb_buff[fcb_index].inode_index].time = (time->tm_hour) * 2048 + (time->tm_min) * 32 + (time->tm_sec) / 2;
-    inode_ptr[fcb_buff[fcb_index].inode_index].length-=sizeof (fcb);
+    inode_ptr[fcb_buff[0].inode_index].date = (time->tm_year - 100) * 512 + (time->tm_mon + 1) * 32 + (time->tm_mday);
+    inode_ptr[fcb_buff[0].inode_index].time = (time->tm_hour) * 2048 + (time->tm_min) * 32 + (time->tm_sec) / 2;
+    inode_ptr[fcb_buff[0].inode_index].length-=sizeof (fcb);
 
 //判断删除的是否是当前打开目录的下的文件
     if(strcmp(cur_dir.dir,inode_ptr[fcb_buff[0].inode_index].dir)==0){
