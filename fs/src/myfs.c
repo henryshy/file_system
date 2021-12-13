@@ -485,12 +485,8 @@ int my_mkdir(char* dirname)
 
 
 //判断当前打开目录是否需要修改
-        if(dirname[0]=='/'){
-            if(cur_dir.first_block==ROOT_BLOCK_INDEX){
-                cur_dir.length=inode_ptr[fcb_buff[0].inode_index].length;
-            }
-        }
-        else{
+
+        if(strcmp(cur_dir.dir,inode_ptr[fcb_buff[0].inode_index].dir)==0){
             cur_dir.length=inode_ptr[fcb_buff[0].inode_index].length;
         }
 //在新的目录文件中创建.和..两个特殊目录项
